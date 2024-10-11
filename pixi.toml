@@ -1,0 +1,33 @@
+[project]
+name = "deltaseis_env"
+version = "0.1.0"
+description = "Add a short description here"
+authors = ["roeland <roeland.nieboer@deltares.nl>"]
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64", "osx-arm64", "osx-64"]
+
+[tasks]
+start = "python -m pip install --no-deps --editable ."
+notebook = "jupyter notebook ./tutorials/segy_editing.ipynb"
+
+[dependencies]
+mamba = "*"
+numba = ">=0.59.0,<0.60"
+obspy = "*"
+scipy = "*"
+numpy = "*"
+pyproj = "*"
+pycrs = "*"
+shapely = "*"
+xarray = "*"
+python = ">=3.12"
+pyzmq = ">=25.1.2,<25.2"
+matplotlib = ">=3.8.3,<3.9"
+ipykernel = ">=6.29.3,<6.30"
+jupyter = ">=1.0.0,<1.1"
+geopandas = ">=0.14.3,<0.15"
+pip = ">=24.0,<25"
+
+[pypi-dependencies]
+segyio = "*"
+geost = "*"

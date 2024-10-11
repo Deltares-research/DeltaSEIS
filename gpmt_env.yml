@@ -1,0 +1,20 @@
+name: deltaseis_env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - mamba
+  - numba
+  - obspy
+  - scipy
+  - numpy
+  - pyproj
+  - pycrs
+  - shapely
+  - xarray
+  - matplotlib
+  - notebook
+  - voila
+  - nbconvert
+  - pip:
+      - segyio

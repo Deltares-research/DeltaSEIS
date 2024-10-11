@@ -1,0 +1,85 @@
+[build-system]
+requires = [
+    "setuptools>=64",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deltaseis"
+version = "0.1.0"
+authors = [
+    {name = "Roeland Nieboer", email = "roeland.nieboer@deltares.nl"}
+]
+description = "Subsurface data made easy"
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research/Consultans",
+    "Topic :: Scientific/Engineering :: Geophysics",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: 3.11",
+	"Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "numba",
+    "numpy",
+    "pyproj",
+    "pycrs",
+    "shapely",
+    "xarray",
+    "geopandas",
+    "xlrd",
+    "openpyxl",
+	"segyio",
+	"obspy",
+	"geost",
+    "pyvista >=0.36.1",
+    "shapely >=2.0.1 ",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "sphinx",
+    "sphinx-rtd-theme",
+]
+
+[project.urls]
+Homepage = "https://github.com/Deltares-research/DeltaSEIS"
+Repository = "https://github.com/Deltares-research/DeltaSEIS.git"
+Issues = "https://github.com/Deltares-research/DeltaSEIS/issues"
+
+[tool.setuptools]
+packages = ["deltaseis"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+markers = [
+	"unittest: test of single component",
+	"integrationtest: test of multiple components",
+]
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+select = ["F", "E", "W", "N", "I001"]
+ignore = ["F401"]
+unfixable = ["F401"]
+
+[tool.ruff.pydocstyle]
+convention = "numpy"
