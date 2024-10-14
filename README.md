@@ -1,8 +1,6 @@
 # deltaseis
 [![License: MIT](https://img.shields.io/pypi/l/imod)](https://choosealicense.com/licenses/mit)
 [![Lifecycle: experimental](https://lifecycle.r-lib.org/articles/figures/lifecycle-experimental.svg)](https://lifecycle.r-lib.org/articles/stages.html)
-[![Build: status](https://gitlab.com/deltares/tgg-projects/subsurface-toolbox/pysst/badges/main/pipeline.svg)](https://gitlab.com/deltares/tgg-projects/subsurface-toolbox/pysst/-/pipelines)
-[![Coverage](https://gitlab.com/deltares/tgg-projects/subsurface-toolbox/pysst/badges/main/coverage.svg)](https://gitlab.com/deltares/tgg-projects/subsurface-toolbox/pysst/-/pipelines)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 [![Formatting: ruff](https://camo.githubusercontent.com/238a858d2190f028e2acde6cf05c6f71b67b3ad439e2788a518ae40f8fc2d0e3/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f6c696e7465722d727566662d726564)](https://github.com/charliermarsh/ruff)
 
