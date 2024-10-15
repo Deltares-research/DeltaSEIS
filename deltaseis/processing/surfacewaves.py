@@ -1,4 +1,4 @@
-def MASW(Signal_masw,dx,freq_min,freq_max,vph_min,vph_max,fs,source_pos,y_offset):
+def masw(Signal_masw,dx,freq_min,freq_max,vph_min,vph_max,fs,source_pos,y_offset):
 
     
     import numpy as np

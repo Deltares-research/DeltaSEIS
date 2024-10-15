@@ -67,5 +67,7 @@ for directory in sub_directories:
     export_sgy(data_resample, fs_resample, dx, shot_number, shotpoint_interval, out_sgy)
 
 
+
+
     
     

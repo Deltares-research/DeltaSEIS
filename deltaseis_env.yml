@@ -2,7 +2,7 @@ name: deltaseis_env
 channels:
   - conda-forge
 dependencies:
-  - python=3.10
+  - python=3.12
   - mamba
   - numba
   - obspy
@@ -13,8 +13,13 @@ dependencies:
   - shapely
   - xarray
   - matplotlib
-  - notebook
+  - ipykernel
+  - jupyter
   - voila
   - nbconvert
+  - geopandas
   - pip:
       - segyio
+      - geost
+      - segpy
+      - opencv-python
