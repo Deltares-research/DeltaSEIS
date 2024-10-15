@@ -1,10 +1,7 @@
 # deltaseis
 [![License: MIT](https://img.shields.io/pypi/l/imod)](https://choosealicense.com/licenses/mit)
 [![Lifecycle: experimental](https://lifecycle.r-lib.org/articles/figures/lifecycle-experimental.svg)](https://lifecycle.r-lib.org/articles/stages.html)
-[![Build: status](https://gitlab.com/deltares/tgg-projects/subsurface-toolbox/pysst/badges/main/pipeline.svg)](https://gitlab.com/deltares/tgg-projects/subsurface-toolbox/pysst/-/pipelines)
-[![Coverage](https://gitlab.com/deltares/tgg-projects/subsurface-toolbox/pysst/badges/main/coverage.svg)](https://gitlab.com/deltares/tgg-projects/subsurface-toolbox/pysst/-/pipelines)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
-[![Formatting: ruff](https://camo.githubusercontent.com/238a858d2190f028e2acde6cf05c6f71b67b3ad439e2788a518ae40f8fc2d0e3/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f6c696e7465722d727566662d726564)](https://github.com/charliermarsh/ruff)
+[![Formatting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/charliermarsh/ruff)
 
 The Geophysical Modelling and Processing Toolbox (deltaseis) package is designed to handle all common formats of geophysical data (for now only seismic data). It provides selection, editing, processing, analysis, and export methods that can be applied generically to the loaded data. It is designed to connect with other Deltares developments such as [iMod](https://gitlab.com/deltares/imod) and [DataFusionTools](https://bitbucket.org/DeltaresGEO/datafusiontools/src/master/).
 
