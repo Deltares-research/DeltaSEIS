@@ -8,49 +8,40 @@ proprietary seismic processing software VISTA (Schlumberger)
 For model stability the semd files are strongly oversampled so they are
 downsampled before conversion.
 
-For a quick check check, the data is displayed with imshow.
+For a quick check, the data is displayed with imshow.
 
 @author: nieboer
 """
 
 #short imports due to __init__.py file
-from deltaseis import read_semd, resample, export_sgy
+from deltaseis import read_semd, resample, export_sgy, masw
 import matplotlib.pyplot as plt
 from pathlib import Path 
 from re import findall
-import tkinter.filedialog, tkinter.simpledialog
-import tkinter as tk
-root = tk.Tk().withdraw()
+from pathlib import Path
 
-main_directory = Path(r'\\wsl.localhost\Ubuntu\home\rlnd\projects\DiggerDAS\hole1')
-sub_directories = [entry for entry in main_directory.iterdir() if entry.is_dir()]
+root_directory = Path(r'\\wsl.localhost\Ubuntu\home\rlnd\projects\DiggerDAS')
+sub_directories = sorted([d for d in root_directory.rglob('*') if d.name == 'OUTPUT_FILES' and d.is_dir()])
 
 
 for directory in sub_directories:
-    directory = directory/"OUTPUT_FILES"
+
     print(directory)
-    
-    extension = ".semp"
-    file_list = [file for file in directory.iterdir() if file.is_file() and file.name.endswith(extension)]
-    
-        
-    # file_list= tk.filedialog.askopenfilenames(filetypes = (
-    #     ("SPECFEM XZ component","*Z.semd"),
-    #     ("SPECFEM XX component","*X.semd"),
-    #     ("all files","*.*")))
+
+    extension = ".semd"
+    file_list = sorted([file for file in directory.iterdir() if file.is_file() and file.name.endswith(extension)])
     
     out_folder = Path(file_list[0]).parents[2]
     shot_name = Path(file_list[0]).parents[1].name
     
     #%%READ SPECFEM FILES TO deltaseis FORMAT
-    
     data, fs, t_start = read_semd(file_list, verbose=True)
     dx = 0.5 #m receiver spacing
-    shotpoint_interval = 0.5 #m
+    shotpoint_interval = 0.0 #m
 
     #%%RESAMPLE, keep ~5x nyquist, max frequency to be retrieved 150 Hzd
     
-    fs_resample = 4000 #Hz
+    fs_resample = 40000 #Hz
     data_resample = resample(data, fs, fs_resample)
     
     #%% PLOT FOR QC
@@ -74,5 +65,7 @@ for directory in sub_directories:
     
     out_sgy =(out_folder/shot_name).with_suffix(".sgy")
     export_sgy(data_resample, fs_resample, dx, shot_number, shotpoint_interval, out_sgy)
+
+
     
     

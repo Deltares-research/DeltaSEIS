@@ -392,16 +392,22 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.22.0-py312hd58854c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.5-hfc55251_0.conda
       - pypi: https://files.pythonhosted.org/packages/0b/f7/85273299ab57117850cc0a936c64151171fac4da49bc6fba0dad984a7c5f/affine-2.4.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/a2/55/8f8cab2afd404cf578136ef2cc5dfb50baa1761b68c9da1fb1e4eed343c9/docopt-0.6.2.tar.gz
+      - pypi: https://files.pythonhosted.org/packages/20/e3/493d0a477e0b15a77d1e92d97a4447bde79280082b507bb57f3e68e4e064/docopt_subcommands-4.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/96/c2/3dd434b0108730014f1b96fd286040dc3bcb70066346f7e01ec2ac95865f/et_xmlfile-1.1.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/fa/07/5dc359aba858ec096bd9e72c4a214617c95da24553a736bcce7818a61486/exit_codes-1.3.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/d4/fffbc9ec57ad9d6f9fb0925a1a3c9b88ba50ff77904c6675883852ceb0be/geost-0.2.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/c0/da/977ded879c29cbd04de313843e76868e6e13408a94ed6b987245dc7c8506/openpyxl-3.1.5-py2.py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/1d/44/6a65ecd630393d47ad3e7d5354768cb7f9a10b3a0eb2cd8c6f52b28211ee/pbr-6.1.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a8/87/77cc11c7a9ea9fd05503def69e3d18605852cd0d4b0d3b8f15bbeb3ef1d1/pooch-1.8.2-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/c2/0c/ea2107236740be8fa0e0d4a293a095c9f43546a2465bb7df34eee9126b09/pyarrow-17.0.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/f1/c4/9625418a1413005e486c006e56675334929fad864347c5ae7c1b2e7fe639/pyarrow-17.0.0-cp312-cp312-manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/e9/ec/ebc65900d1bbc4aec23d15c1d60472565b55ab7c4f9d2bcfba29b8406c38/pyvista-0.44.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/cf/9b/4b3a407a3083806cf4de0add82553a8b79744a3bda0df758212d10289d23/rasterio-1.4.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/de/72/ea9c7d65aca6ce8f3ea37844c2d227339545611e0e17f5b7cbdd3980d381/rioxarray-0.17.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2f/4b/ea1c1c4ecaa97baf8001568d502eaff1bbc3d5c1b48cce3f3fd5a77b8f52/scooby-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/38/5e/1d5fc448d1225ee1e1a69ffc4c06f1b7fcf792deebea9452bfdc47ca04f5/segpy-2.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/22/bd/c95946c7246961b2e2f28fadcc478a0320fb28037dfb3057b4797062db8d/segyio-1.9.12-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/ec/50/70762bdb23f6c2b746b90661f461d33c4913a22a46bb5265b10947e85ffb/stevedore-5.3.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/01/ee/730d57c6d7353c1afb919ceedfac387a190ccb92e611c4b14f88e6f39066/vtk-9.3.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/a6/0c/c2a72d51fe56e08a08acc85d13013558a2d793028ae7385448a6ccdfae64/xlrd-2.0.1-py2.py3-none-any.whl
       osx-64:
@@ -730,16 +736,22 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstandard-0.22.0-py312h7a629f7_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.5-h829000d_0.conda
       - pypi: https://files.pythonhosted.org/packages/0b/f7/85273299ab57117850cc0a936c64151171fac4da49bc6fba0dad984a7c5f/affine-2.4.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/a2/55/8f8cab2afd404cf578136ef2cc5dfb50baa1761b68c9da1fb1e4eed343c9/docopt-0.6.2.tar.gz
+      - pypi: https://files.pythonhosted.org/packages/20/e3/493d0a477e0b15a77d1e92d97a4447bde79280082b507bb57f3e68e4e064/docopt_subcommands-4.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/96/c2/3dd434b0108730014f1b96fd286040dc3bcb70066346f7e01ec2ac95865f/et_xmlfile-1.1.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/fa/07/5dc359aba858ec096bd9e72c4a214617c95da24553a736bcce7818a61486/exit_codes-1.3.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/d4/fffbc9ec57ad9d6f9fb0925a1a3c9b88ba50ff77904c6675883852ceb0be/geost-0.2.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/c0/da/977ded879c29cbd04de313843e76868e6e13408a94ed6b987245dc7c8506/openpyxl-3.1.5-py2.py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/1d/44/6a65ecd630393d47ad3e7d5354768cb7f9a10b3a0eb2cd8c6f52b28211ee/pbr-6.1.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a8/87/77cc11c7a9ea9fd05503def69e3d18605852cd0d4b0d3b8f15bbeb3ef1d1/pooch-1.8.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d4/62/ce6ac1275a432b4a27c55fe96c58147f111d8ba1ad800a112d31859fae2f/pyarrow-17.0.0-cp312-cp312-macosx_10_15_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/e9/ec/ebc65900d1bbc4aec23d15c1d60472565b55ab7c4f9d2bcfba29b8406c38/pyvista-0.44.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6a/98/ba5e1f4764ecde8678c6b8653150314964677ad35425b1e0d3ccc8d71a0a/rasterio-1.4.1-cp312-cp312-macosx_10_15_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/de/72/ea9c7d65aca6ce8f3ea37844c2d227339545611e0e17f5b7cbdd3980d381/rioxarray-0.17.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2f/4b/ea1c1c4ecaa97baf8001568d502eaff1bbc3d5c1b48cce3f3fd5a77b8f52/scooby-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/38/5e/1d5fc448d1225ee1e1a69ffc4c06f1b7fcf792deebea9452bfdc47ca04f5/segpy-2.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/3e/b7/eb0a498ce9b459f9e002caa8d5ec9db25e36fe60a69f737abc9dc7e9eeac/segyio-1.9.12-cp312-cp312-macosx_10_9_x86_64.whl
+      - pypi: https://files.pythonhosted.org/packages/ec/50/70762bdb23f6c2b746b90661f461d33c4913a22a46bb5265b10947e85ffb/stevedore-5.3.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6f/ba/1571d61013f3f5778c11741d5de19db197b437d1a52215560f016662597b/vtk-9.3.1-cp312-cp312-macosx_10_10_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/a6/0c/c2a72d51fe56e08a08acc85d13013558a2d793028ae7385448a6ccdfae64/xlrd-2.0.1-py2.py3-none-any.whl
       osx-arm64:
@@ -1068,16 +1080,22 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstandard-0.22.0-py312h7975427_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.5-h4f39d0f_0.conda
       - pypi: https://files.pythonhosted.org/packages/0b/f7/85273299ab57117850cc0a936c64151171fac4da49bc6fba0dad984a7c5f/affine-2.4.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/a2/55/8f8cab2afd404cf578136ef2cc5dfb50baa1761b68c9da1fb1e4eed343c9/docopt-0.6.2.tar.gz
+      - pypi: https://files.pythonhosted.org/packages/20/e3/493d0a477e0b15a77d1e92d97a4447bde79280082b507bb57f3e68e4e064/docopt_subcommands-4.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/96/c2/3dd434b0108730014f1b96fd286040dc3bcb70066346f7e01ec2ac95865f/et_xmlfile-1.1.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/fa/07/5dc359aba858ec096bd9e72c4a214617c95da24553a736bcce7818a61486/exit_codes-1.3.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/d4/fffbc9ec57ad9d6f9fb0925a1a3c9b88ba50ff77904c6675883852ceb0be/geost-0.2.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/c0/da/977ded879c29cbd04de313843e76868e6e13408a94ed6b987245dc7c8506/openpyxl-3.1.5-py2.py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/1d/44/6a65ecd630393d47ad3e7d5354768cb7f9a10b3a0eb2cd8c6f52b28211ee/pbr-6.1.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a8/87/77cc11c7a9ea9fd05503def69e3d18605852cd0d4b0d3b8f15bbeb3ef1d1/pooch-1.8.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/0a/dbd0c134e7a0c30bea439675cc120012337202e5fac7163ba839aa3691d2/pyarrow-17.0.0-cp312-cp312-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/e9/ec/ebc65900d1bbc4aec23d15c1d60472565b55ab7c4f9d2bcfba29b8406c38/pyvista-0.44.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/92/88/c5722be244f426db8024139fc958079b71879a935e469886edc5dbe6130a/rasterio-1.4.1-cp312-cp312-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/de/72/ea9c7d65aca6ce8f3ea37844c2d227339545611e0e17f5b7cbdd3980d381/rioxarray-0.17.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2f/4b/ea1c1c4ecaa97baf8001568d502eaff1bbc3d5c1b48cce3f3fd5a77b8f52/scooby-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/38/5e/1d5fc448d1225ee1e1a69ffc4c06f1b7fcf792deebea9452bfdc47ca04f5/segpy-2.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/80/a3/c4d4b790eb75c8fe9d8d179a0c4cdd8fe5dc33d1b06e9750740a3f1f47f3/segyio-1.9.12-cp312-cp312-macosx_11_0_arm64.whl
+      - pypi: https://files.pythonhosted.org/packages/ec/50/70762bdb23f6c2b746b90661f461d33c4913a22a46bb5265b10947e85ffb/stevedore-5.3.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/8e/75/c637c620d23ccecb8ddf58fdb80af1dc56ecdd60f3e018c55e041663398b/vtk-9.3.1-cp312-cp312-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/a6/0c/c2a72d51fe56e08a08acc85d13013558a2d793028ae7385448a6ccdfae64/xlrd-2.0.1-py2.py3-none-any.whl
       win-64:
@@ -1418,16 +1436,22 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstandard-0.22.0-py312h01d794b_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.5-h12be248_0.conda
       - pypi: https://files.pythonhosted.org/packages/0b/f7/85273299ab57117850cc0a936c64151171fac4da49bc6fba0dad984a7c5f/affine-2.4.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/a2/55/8f8cab2afd404cf578136ef2cc5dfb50baa1761b68c9da1fb1e4eed343c9/docopt-0.6.2.tar.gz
+      - pypi: https://files.pythonhosted.org/packages/20/e3/493d0a477e0b15a77d1e92d97a4447bde79280082b507bb57f3e68e4e064/docopt_subcommands-4.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/96/c2/3dd434b0108730014f1b96fd286040dc3bcb70066346f7e01ec2ac95865f/et_xmlfile-1.1.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/fa/07/5dc359aba858ec096bd9e72c4a214617c95da24553a736bcce7818a61486/exit_codes-1.3.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/d4/fffbc9ec57ad9d6f9fb0925a1a3c9b88ba50ff77904c6675883852ceb0be/geost-0.2.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/c0/da/977ded879c29cbd04de313843e76868e6e13408a94ed6b987245dc7c8506/openpyxl-3.1.5-py2.py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/1d/44/6a65ecd630393d47ad3e7d5354768cb7f9a10b3a0eb2cd8c6f52b28211ee/pbr-6.1.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a8/87/77cc11c7a9ea9fd05503def69e3d18605852cd0d4b0d3b8f15bbeb3ef1d1/pooch-1.8.2-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/ae/49/baafe2a964f663413be3bd1cf5c45ed98c5e42e804e2328e18f4570027c1/pyarrow-17.0.0-cp312-cp312-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/e9/ec/ebc65900d1bbc4aec23d15c1d60472565b55ab7c4f9d2bcfba29b8406c38/pyvista-0.44.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/67/74/159ea0e648347918a7c1d4b56b17b881453e49828feac18ab05f29896b43/rasterio-1.4.1-cp312-cp312-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/de/72/ea9c7d65aca6ce8f3ea37844c2d227339545611e0e17f5b7cbdd3980d381/rioxarray-0.17.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2f/4b/ea1c1c4ecaa97baf8001568d502eaff1bbc3d5c1b48cce3f3fd5a77b8f52/scooby-0.10.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/38/5e/1d5fc448d1225ee1e1a69ffc4c06f1b7fcf792deebea9452bfdc47ca04f5/segpy-2.1.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a6/c4/38dcad36fc0919efc04c77c50f50a308e63e0f3117cfe4c6fd4c489b5436/segyio-1.9.12-cp312-cp312-win_amd64.whl
+      - pypi: https://files.pythonhosted.org/packages/ec/50/70762bdb23f6c2b746b90661f461d33c4913a22a46bb5265b10947e85ffb/stevedore-5.3.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b1/34/b9b6de4009be2fe90919c4943ae99ae3d465ada73061e928d4744683f915/vtk-9.3.1-cp312-cp312-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/a6/0c/c2a72d51fe56e08a08acc85d13013558a2d793028ae7385448a6ccdfae64/xlrd-2.0.1-py2.py3-none-any.whl
 packages:
@@ -4459,6 +4483,22 @@ packages:
   - pkg:pypi/distro
   size: 42039
   timestamp: 1704321683916
+- kind: pypi
+  name: docopt
+  version: 0.6.2
+  url: https://files.pythonhosted.org/packages/a2/55/8f8cab2afd404cf578136ef2cc5dfb50baa1761b68c9da1fb1e4eed343c9/docopt-0.6.2.tar.gz
+  sha256: 49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491
+- kind: pypi
+  name: docopt-subcommands
+  version: 4.0.0
+  url: https://files.pythonhosted.org/packages/20/e3/493d0a477e0b15a77d1e92d97a4447bde79280082b507bb57f3e68e4e064/docopt_subcommands-4.0.0-py2.py3-none-any.whl
+  sha256: 5cbad12756b8429b8d5069306881fe87d3f135c71d8e85088deb64a13229e908
+  requires_dist:
+  - docopt
+  - twine ; extra == 'dev'
+  - wheel ; extra == 'dev'
+  - hypothesis>=1.11 ; extra == 'test'
+  - pytest>=3.0.7 ; extra == 'test'
 - kind: conda
   name: entrypoints
   version: '0.4'
@@ -4516,6 +4556,14 @@ packages:
   - pkg:pypi/executing
   size: 27689
   timestamp: 1698580072627
+- kind: pypi
+  name: exit-codes
+  version: 1.3.0
+  url: https://files.pythonhosted.org/packages/fa/07/5dc359aba858ec096bd9e72c4a214617c95da24553a736bcce7818a61486/exit_codes-1.3.0-py2.py3-none-any.whl
+  sha256: 09444844772043f9be22128856088792be0f91cdbe269af992b1338a5464dc85
+  requires_dist:
+  - pytest ; extra == 'test'
+  - tox ; extra == 'test'
 - kind: conda
   name: expat
   version: 2.6.2
@@ -14142,6 +14190,12 @@ packages:
   - pkg:pypi/parso
   size: 71048
   timestamp: 1638335054552
+- kind: pypi
+  name: pbr
+  version: 6.1.0
+  url: https://files.pythonhosted.org/packages/1d/44/6a65ecd630393d47ad3e7d5354768cb7f9a10b3a0eb2cd8c6f52b28211ee/pbr-6.1.0-py2.py3-none-any.whl
+  sha256: a776ae228892d8013649c0aeccbb3d5f99ee15e005a4cbb7e61d55a067b28a2a
+  requires_python: '>=2.6'
 - kind: conda
   name: pcre2
   version: '10.42'
@@ -15095,8 +15149,8 @@ packages:
 - kind: pypi
   name: pyarrow
   version: 17.0.0
-  url: https://files.pythonhosted.org/packages/d4/62/ce6ac1275a432b4a27c55fe96c58147f111d8ba1ad800a112d31859fae2f/pyarrow-17.0.0-cp312-cp312-macosx_10_15_x86_64.whl
-  sha256: 9b8a823cea605221e61f34859dcc03207e52e409ccf6354634143e23af7c8d22
+  url: https://files.pythonhosted.org/packages/8e/0a/dbd0c134e7a0c30bea439675cc120012337202e5fac7163ba839aa3691d2/pyarrow-17.0.0-cp312-cp312-macosx_11_0_arm64.whl
+  sha256: f1e70de6cb5790a50b01d2b686d54aaf73da01266850b05e3af2a1bc89e16053
   requires_dist:
   - numpy>=1.16.6
   - pytest ; extra == 'test'
@@ -15121,8 +15175,8 @@ packages:
 - kind: pypi
   name: pyarrow
   version: 17.0.0
-  url: https://files.pythonhosted.org/packages/c2/0c/ea2107236740be8fa0e0d4a293a095c9f43546a2465bb7df34eee9126b09/pyarrow-17.0.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-  sha256: 757074882f844411fcca735e39aae74248a1531367a7c80799b4266390ae51cc
+  url: https://files.pythonhosted.org/packages/d4/62/ce6ac1275a432b4a27c55fe96c58147f111d8ba1ad800a112d31859fae2f/pyarrow-17.0.0-cp312-cp312-macosx_10_15_x86_64.whl
+  sha256: 9b8a823cea605221e61f34859dcc03207e52e409ccf6354634143e23af7c8d22
   requires_dist:
   - numpy>=1.16.6
   - pytest ; extra == 'test'
@@ -15134,8 +15188,8 @@ packages:
 - kind: pypi
   name: pyarrow
   version: 17.0.0
-  url: https://files.pythonhosted.org/packages/8e/0a/dbd0c134e7a0c30bea439675cc120012337202e5fac7163ba839aa3691d2/pyarrow-17.0.0-cp312-cp312-macosx_11_0_arm64.whl
-  sha256: f1e70de6cb5790a50b01d2b686d54aaf73da01266850b05e3af2a1bc89e16053
+  url: https://files.pythonhosted.org/packages/f1/c4/9625418a1413005e486c006e56675334929fad864347c5ae7c1b2e7fe639/pyarrow-17.0.0-cp312-cp312-manylinux_2_28_x86_64.whl
+  sha256: b0c6ac301093b42d34410b187bba560b17c0330f64907bfa4f7f7f2444b0cf9b
   requires_dist:
   - numpy>=1.16.6
   - pytest ; extra == 'test'
@@ -16258,6 +16312,51 @@ packages:
 - kind: pypi
   name: rasterio
   version: 1.4.1
+  url: https://files.pythonhosted.org/packages/67/74/159ea0e648347918a7c1d4b56b17b881453e49828feac18ab05f29896b43/rasterio-1.4.1-cp312-cp312-win_amd64.whl
+  sha256: e7b18c4ccf0d813b6056704af86e14d6841e29ec558a9bce2f1ce2e3ee2ef70d
+  requires_dist:
+  - affine
+  - attrs
+  - certifi
+  - click>=4.0
+  - cligj>=0.5
+  - numpy>=1.24
+  - click-plugins
+  - pyparsing
+  - importlib-metadata ; python_full_version < '3.10'
+  - ghp-import ; extra == 'all'
+  - pytest>=2.8.2 ; extra == 'all'
+  - sphinx ; extra == 'all'
+  - sphinx-click ; extra == 'all'
+  - ipython>=2.0 ; extra == 'all'
+  - matplotlib ; extra == 'all'
+  - fsspec ; extra == 'all'
+  - packaging ; extra == 'all'
+  - shapely ; extra == 'all'
+  - hypothesis ; extra == 'all'
+  - pytest-cov>=2.2.0 ; extra == 'all'
+  - sphinx-rtd-theme ; extra == 'all'
+  - boto3>=1.2.4 ; extra == 'all'
+  - numpydoc ; extra == 'all'
+  - ghp-import ; extra == 'docs'
+  - numpydoc ; extra == 'docs'
+  - sphinx ; extra == 'docs'
+  - sphinx-click ; extra == 'docs'
+  - sphinx-rtd-theme ; extra == 'docs'
+  - ipython>=2.0 ; extra == 'ipython'
+  - matplotlib ; extra == 'plot'
+  - boto3>=1.2.4 ; extra == 's3'
+  - boto3>=1.2.4 ; extra == 'test'
+  - fsspec ; extra == 'test'
+  - hypothesis ; extra == 'test'
+  - packaging ; extra == 'test'
+  - pytest-cov>=2.2.0 ; extra == 'test'
+  - pytest>=2.8.2 ; extra == 'test'
+  - shapely ; extra == 'test'
+  requires_python: '>=3.9'
+- kind: pypi
+  name: rasterio
+  version: 1.4.1
   url: https://files.pythonhosted.org/packages/6a/98/ba5e1f4764ecde8678c6b8653150314964677ad35425b1e0d3ccc8d71a0a/rasterio-1.4.1-cp312-cp312-macosx_10_15_x86_64.whl
   sha256: a0cd7b8eda7d3b0097a42a047d2604c3f1f27b4093e2a4e1e7ad379c9f639f65
   requires_dist:
@@ -16269,7 +16368,7 @@ packages:
   - numpy>=1.24
   - click-plugins
   - pyparsing
-  - importlib-metadata ; python_version < '3.10'
+  - importlib-metadata ; python_full_version < '3.10'
   - ghp-import ; extra == 'all'
   - matplotlib ; extra == 'all'
   - boto3>=1.2.4 ; extra == 'all'
@@ -16303,8 +16402,8 @@ packages:
 - kind: pypi
   name: rasterio
   version: 1.4.1
-  url: https://files.pythonhosted.org/packages/67/74/159ea0e648347918a7c1d4b56b17b881453e49828feac18ab05f29896b43/rasterio-1.4.1-cp312-cp312-win_amd64.whl
-  sha256: e7b18c4ccf0d813b6056704af86e14d6841e29ec558a9bce2f1ce2e3ee2ef70d
+  url: https://files.pythonhosted.org/packages/92/88/c5722be244f426db8024139fc958079b71879a935e469886edc5dbe6130a/rasterio-1.4.1-cp312-cp312-macosx_11_0_arm64.whl
+  sha256: af5e0559eb8da3cf0adbc1d26ce86e505ea82814012b7b6711855674ae3f6425
   requires_dist:
   - affine
   - attrs
@@ -16314,20 +16413,20 @@ packages:
   - numpy>=1.24
   - click-plugins
   - pyparsing
-  - importlib-metadata ; python_version < '3.10'
-  - ghp-import ; extra == 'all'
+  - importlib-metadata ; python_full_version < '3.10'
+  - boto3>=1.2.4 ; extra == 'all'
   - pytest>=2.8.2 ; extra == 'all'
-  - sphinx ; extra == 'all'
   - sphinx-click ; extra == 'all'
-  - ipython>=2.0 ; extra == 'all'
   - matplotlib ; extra == 'all'
   - fsspec ; extra == 'all'
+  - hypothesis ; extra == 'all'
   - packaging ; extra == 'all'
   - shapely ; extra == 'all'
-  - hypothesis ; extra == 'all'
+  - sphinx ; extra == 'all'
   - pytest-cov>=2.2.0 ; extra == 'all'
+  - ipython>=2.0 ; extra == 'all'
+  - ghp-import ; extra == 'all'
   - sphinx-rtd-theme ; extra == 'all'
-  - boto3>=1.2.4 ; extra == 'all'
   - numpydoc ; extra == 'all'
   - ghp-import ; extra == 'docs'
   - numpydoc ; extra == 'docs'
@@ -16359,7 +16458,7 @@ packages:
   - numpy>=1.24
   - click-plugins
   - pyparsing
-  - importlib-metadata ; python_version < '3.10'
+  - importlib-metadata ; python_full_version < '3.10'
   - sphinx-click ; extra == 'all'
   - numpydoc ; extra == 'all'
   - fsspec ; extra == 'all'
@@ -16374,51 +16473,6 @@ packages:
   - shapely ; extra == 'all'
   - boto3>=1.2.4 ; extra == 'all'
   - sphinx ; extra == 'all'
-  - ghp-import ; extra == 'docs'
-  - numpydoc ; extra == 'docs'
-  - sphinx ; extra == 'docs'
-  - sphinx-click ; extra == 'docs'
-  - sphinx-rtd-theme ; extra == 'docs'
-  - ipython>=2.0 ; extra == 'ipython'
-  - matplotlib ; extra == 'plot'
-  - boto3>=1.2.4 ; extra == 's3'
-  - boto3>=1.2.4 ; extra == 'test'
-  - fsspec ; extra == 'test'
-  - hypothesis ; extra == 'test'
-  - packaging ; extra == 'test'
-  - pytest-cov>=2.2.0 ; extra == 'test'
-  - pytest>=2.8.2 ; extra == 'test'
-  - shapely ; extra == 'test'
-  requires_python: '>=3.9'
-- kind: pypi
-  name: rasterio
-  version: 1.4.1
-  url: https://files.pythonhosted.org/packages/92/88/c5722be244f426db8024139fc958079b71879a935e469886edc5dbe6130a/rasterio-1.4.1-cp312-cp312-macosx_11_0_arm64.whl
-  sha256: af5e0559eb8da3cf0adbc1d26ce86e505ea82814012b7b6711855674ae3f6425
-  requires_dist:
-  - affine
-  - attrs
-  - certifi
-  - click>=4.0
-  - cligj>=0.5
-  - numpy>=1.24
-  - click-plugins
-  - pyparsing
-  - importlib-metadata ; python_version < '3.10'
-  - boto3>=1.2.4 ; extra == 'all'
-  - pytest>=2.8.2 ; extra == 'all'
-  - sphinx-click ; extra == 'all'
-  - matplotlib ; extra == 'all'
-  - fsspec ; extra == 'all'
-  - hypothesis ; extra == 'all'
-  - packaging ; extra == 'all'
-  - shapely ; extra == 'all'
-  - sphinx ; extra == 'all'
-  - pytest-cov>=2.2.0 ; extra == 'all'
-  - ipython>=2.0 ; extra == 'all'
-  - ghp-import ; extra == 'all'
-  - sphinx-rtd-theme ; extra == 'all'
-  - numpydoc ; extra == 'all'
   - ghp-import ; extra == 'docs'
   - numpydoc ; extra == 'docs'
   - sphinx ; extra == 'docs'
@@ -17324,19 +17378,24 @@ packages:
   - mkl ; extra == 'cpu'
   requires_python: '>=3.8'
 - kind: pypi
-  name: segyio
-  version: 1.9.12
-  url: https://files.pythonhosted.org/packages/3e/b7/eb0a498ce9b459f9e002caa8d5ec9db25e36fe60a69f737abc9dc7e9eeac/segyio-1.9.12-cp312-cp312-macosx_10_9_x86_64.whl
-  sha256: a6017117d3ad280fc489b2f00a5981c729e43f362650cf835054289aba610a59
+  name: segpy
+  version: 2.1.0
+  url: https://files.pythonhosted.org/packages/38/5e/1d5fc448d1225ee1e1a69ffc4c06f1b7fcf792deebea9452bfdc47ca04f5/segpy-2.1.0-py3-none-any.whl
+  sha256: 9660469b3784a05e13192d2956ef592d0d1cda6950c1607bef752c92641182c9
   requires_dist:
-  - numpy>=1.10
-- kind: pypi
-  name: segyio
-  version: 1.9.12
-  url: https://files.pythonhosted.org/packages/a6/c4/38dcad36fc0919efc04c77c50f50a308e63e0f3117cfe4c6fd4c489b5436/segyio-1.9.12-cp312-cp312-win_amd64.whl
-  sha256: 050f70d180573530979b575863cb07a29de20f48a442aa126d817558d3dafb07
-  requires_dist:
-  - numpy>=1.10
+  - docopt-subcommands
+  - stevedore
+  - exit-codes
+  - check-manifest ; extra == 'dev'
+  - wheel ; extra == 'dev'
+  - twine ; extra == 'dev'
+  - bumpversion ; extra == 'dev'
+  - sphinx ; extra == 'doc'
+  - cartouche ; extra == 'doc'
+  - sphinx-rtd-theme ; extra == 'doc'
+  - coverage ; extra == 'test'
+  - hypothesis ; extra == 'test'
+  - pytest ; extra == 'test'
 - kind: pypi
   name: segyio
   version: 1.9.12
@@ -17347,8 +17406,22 @@ packages:
 - kind: pypi
   name: segyio
   version: 1.9.12
+  url: https://files.pythonhosted.org/packages/3e/b7/eb0a498ce9b459f9e002caa8d5ec9db25e36fe60a69f737abc9dc7e9eeac/segyio-1.9.12-cp312-cp312-macosx_10_9_x86_64.whl
+  sha256: a6017117d3ad280fc489b2f00a5981c729e43f362650cf835054289aba610a59
+  requires_dist:
+  - numpy>=1.10
+- kind: pypi
+  name: segyio
+  version: 1.9.12
   url: https://files.pythonhosted.org/packages/80/a3/c4d4b790eb75c8fe9d8d179a0c4cdd8fe5dc33d1b06e9750740a3f1f47f3/segyio-1.9.12-cp312-cp312-macosx_11_0_arm64.whl
   sha256: 4a7c6f6e55d01005dd2828035c6e02a0259dca76eadd35c35ba3206f6be00fc5
+  requires_dist:
+  - numpy>=1.10
+- kind: pypi
+  name: segyio
+  version: 1.9.12
+  url: https://files.pythonhosted.org/packages/a6/c4/38dcad36fc0919efc04c77c50f50a308e63e0f3117cfe4c6fd4c489b5436/segyio-1.9.12-cp312-cp312-win_amd64.whl
+  sha256: 050f70d180573530979b575863cb07a29de20f48a442aa126d817558d3dafb07
   requires_dist:
   - numpy>=1.10
 - kind: conda
@@ -17916,6 +17989,14 @@ packages:
   - pkg:pypi/stack-data
   size: 26205
   timestamp: 1669632203115
+- kind: pypi
+  name: stevedore
+  version: 5.3.0
+  url: https://files.pythonhosted.org/packages/ec/50/70762bdb23f6c2b746b90661f461d33c4913a22a46bb5265b10947e85ffb/stevedore-5.3.0-py3-none-any.whl
+  sha256: 1efd34ca08f474dad08d9b19e934a22c68bb6fe416926479ba29e5013bcc8f78
+  requires_dist:
+  - pbr>=2.0.0
+  requires_python: '>=3.8'
 - kind: conda
   name: tbb
   version: 2021.11.0
@@ -18693,24 +18774,6 @@ packages:
 - kind: pypi
   name: vtk
   version: 9.3.1
-  url: https://files.pythonhosted.org/packages/6f/ba/1571d61013f3f5778c11741d5de19db197b437d1a52215560f016662597b/vtk-9.3.1-cp312-cp312-macosx_10_10_x86_64.whl
-  sha256: 05a4b6e387a906e8c8d6844441f9200116e937069fcf81f43e2600f26eb046de
-  requires_dist:
-  - matplotlib>=2.0.0
-  - numpy>=1.9 ; extra == 'numpy'
-  - wslink>=1.0.4 ; extra == 'web'
-- kind: pypi
-  name: vtk
-  version: 9.3.1
-  url: https://files.pythonhosted.org/packages/b1/34/b9b6de4009be2fe90919c4943ae99ae3d465ada73061e928d4744683f915/vtk-9.3.1-cp312-cp312-win_amd64.whl
-  sha256: 685988e09070e06c8605886591698fd42d8225489509b6537a5046cd034cc93e
-  requires_dist:
-  - matplotlib>=2.0.0
-  - numpy>=1.9 ; extra == 'numpy'
-  - wslink>=1.0.4 ; extra == 'web'
-- kind: pypi
-  name: vtk
-  version: 9.3.1
   url: https://files.pythonhosted.org/packages/01/ee/730d57c6d7353c1afb919ceedfac387a190ccb92e611c4b14f88e6f39066/vtk-9.3.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
   sha256: f728bb61f43fce850d622ced3b3d51b3116f767685ca4e4e0076f624e2d2307d
   requires_dist:
@@ -18720,8 +18783,26 @@ packages:
 - kind: pypi
   name: vtk
   version: 9.3.1
+  url: https://files.pythonhosted.org/packages/6f/ba/1571d61013f3f5778c11741d5de19db197b437d1a52215560f016662597b/vtk-9.3.1-cp312-cp312-macosx_10_10_x86_64.whl
+  sha256: 05a4b6e387a906e8c8d6844441f9200116e937069fcf81f43e2600f26eb046de
+  requires_dist:
+  - matplotlib>=2.0.0
+  - numpy>=1.9 ; extra == 'numpy'
+  - wslink>=1.0.4 ; extra == 'web'
+- kind: pypi
+  name: vtk
+  version: 9.3.1
   url: https://files.pythonhosted.org/packages/8e/75/c637c620d23ccecb8ddf58fdb80af1dc56ecdd60f3e018c55e041663398b/vtk-9.3.1-cp312-cp312-macosx_11_0_arm64.whl
   sha256: bdbefb1aef9599a0a0b8222c9582f26946732a93534e6ec37d4b8e2c524c627e
+  requires_dist:
+  - matplotlib>=2.0.0
+  - numpy>=1.9 ; extra == 'numpy'
+  - wslink>=1.0.4 ; extra == 'web'
+- kind: pypi
+  name: vtk
+  version: 9.3.1
+  url: https://files.pythonhosted.org/packages/b1/34/b9b6de4009be2fe90919c4943ae99ae3d465ada73061e928d4744683f915/vtk-9.3.1-cp312-cp312-win_amd64.whl
+  sha256: 685988e09070e06c8605886591698fd42d8225489509b6537a5046cd034cc93e
   requires_dist:
   - matplotlib>=2.0.0
   - numpy>=1.9 ; extra == 'numpy'

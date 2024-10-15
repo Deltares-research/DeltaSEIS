@@ -41,9 +41,9 @@ def export_sgy(data, fs, dx, shot_number, spi, out_sgy):
     import numpy as np
     import segyio
     
-    data = np.float32(data)
+    #data = np.float32(data)
     data = np.ascontiguousarray(data)
-    print("\nData was converted to 32-bit floating point numbers")
+    print("\nData was NOT converted to 32-bit floating point numbers")
     
     nsamples, ntraces = np.shape(data)
     recording_delay = 0
