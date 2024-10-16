@@ -5,6 +5,8 @@ Created on Tue Aug 22 19:13:22 2023
  fix with edwin
  
  add docstrings
+
+ do we stil need to export to sg2/dat as well? where do we use that (not vista)
  
  
 @author: nieboer
@@ -12,7 +14,6 @@ Created on Tue Aug 22 19:13:22 2023
 #%%
 def header_geometry(ntraces, dx, shot_number, spi):
 
-    
     import numpy as np
         
     geometry_dict = {}
@@ -41,9 +42,9 @@ def export_sgy(data, fs, dx, shot_number, spi, out_sgy):
     import numpy as np
     import segyio
     
-    #data = np.float32(data)
-    data = np.ascontiguousarray(data)
-    print("\nData was NOT converted to 32-bit floating point numbers")
+    data = np.float32(data)
+    #data = np.ascontiguousarray(data, dtype=np.float32)
+    print("\nData was converted to 32-bit floating point numbers\n")
     
     nsamples, ntraces = np.shape(data)
     recording_delay = 0
@@ -83,7 +84,7 @@ def export_sgy(data, fs, dx, shot_number, spi, out_sgy):
             f.header[i][185]    = int(100*g['y_cdp'][i])        #CDP Y
             
             #populate the traces with data
-            f.trace[i] = data[:,i]
+            f.trace[i] = np.ascontiguousarray(data[:,i])
             
 
 
@@ -92,8 +93,7 @@ def export_sg2(data, fs, dx, shot_number, spi, out_sg2):
     
     print("\nWarning: this function will be depricated, use export_sgy instead")
     
-    
-    
+        
     import numpy as np
     import struct
     nsamples, ntraces = np.shape(data)

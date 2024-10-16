@@ -16,7 +16,7 @@ def create_video_from_images(image_folder_path, video_name, max_width=1920, fps=
     images = sorted(image_folder.glob('*.jpg'))
 
     if not images:
-        print("No images found in the specified folder.")
+        print(f"No images found in the specified folder: {image_folder_path}.")
         return
 
     total_images = len(images)
@@ -50,7 +50,7 @@ def create_video_from_images(image_folder_path, video_name, max_width=1920, fps=
 
     video.release()
     cv2.destroyAllWindows()
-    print(f"Video '{video_name}' created successfully!")
+    print(f"Video '{video_name}' created successfully!\n")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create a video from JPG images.")

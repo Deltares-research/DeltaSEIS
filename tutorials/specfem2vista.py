@@ -15,6 +15,7 @@ For a quick check, the data is displayed with imshow.
 
 #short imports due to __init__.py file
 from deltaseis import read_semd, resample, export_sgy, masw
+from deltaseis.tools.moviemaker import create_video_from_images
 import matplotlib.pyplot as plt
 from pathlib import Path 
 from re import findall
@@ -22,6 +23,7 @@ from pathlib import Path
 
 root_directory = Path(r'\\wsl.localhost\Ubuntu\home\rlnd\projects\DiggerDAS')
 sub_directories = sorted([d for d in root_directory.rglob('*') if d.name == 'OUTPUT_FILES' and d.is_dir()])
+sub_directories =[sub_directories[6]]
 
 
 for directory in sub_directories:
@@ -66,7 +68,8 @@ for directory in sub_directories:
     out_sgy =(out_folder/shot_name).with_suffix(".sgy")
     export_sgy(data_resample, fs_resample, dx, shot_number, shotpoint_interval, out_sgy)
 
-
+    #%% create video from the snapshot created by specfem
+    create_video_from_images(directory, directory.parent/"movie.avi", fps=5, cut_percentage=60)
 
 
     
