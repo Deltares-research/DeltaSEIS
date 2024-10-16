@@ -11,9 +11,12 @@ def resize_image(image, max_width):
         return cv2.resize(image, (new_width, new_height))
     return image  # Return original image if no resizing is needed
 
-def create_video_from_images(image_folder_path, video_name, max_width=1920, fps=30, cut_percentage=0):
+def create_video_from_images(image_folder_path, video_name=None, max_width=1920, fps=30, cut_percentage=0):
     image_folder = Path(image_folder_path)
     images = sorted(image_folder.glob('*.jpg'))
+
+    if video_name is None:
+        video_name = image_folder.parent/"movie.avi"
 
     if not images:
         print(f"No images found in the specified folder: {image_folder_path}.")
@@ -52,12 +55,25 @@ def create_video_from_images(image_folder_path, video_name, max_width=1920, fps=
     cv2.destroyAllWindows()
     print(f"Video '{video_name}' created successfully!\n")
 
+import argparse
+from pathlib import Path
+
+def create_video_from_images(image_folder_path, video_name=None, max_width=1920, fps=30, cut_percentage=0):
+    if video_name is None:
+        video_name = image_folder_path.parent / "movie.avi"
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create a video from JPG images.")
     parser.add_argument("image_folder", type=str, help="Path to the folder containing JPG images.")
-    parser.add_argument("video_name", type=str, help="Name of the output video file.")
+    parser.add_argument("--video_name", type=str, help="Name of the output video file.")
     parser.add_argument("--fps", type=int, default=30, help="Frames per second for the output video (default: 30).")
     parser.add_argument("--cut", type=float, default=0, help="Percentage of the video to cut from the end (default: 0).")
     
     args = parser.parse_args()
-    create_video_from_images(args.image_folder, args.video_name, fps=args.fps, cut_percentage=args.cut)
+    
+    # Convert image_folder to a Path object
+    image_folder_path = Path(args.image_folder)
+    
+    # Call the function with the appropriate arguments
+    create_video_from_images(image_folder_path, video_name=args.video_name, fps=args.fps, cut_percentage=args.cut)
+
