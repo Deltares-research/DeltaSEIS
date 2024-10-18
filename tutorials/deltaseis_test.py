@@ -5,7 +5,7 @@ Testscript for the deltaseis module
 @author: nieboer
 """
 #%%
-from deltaseis_module import Seismic
+from deltaseis import Seismic
 import numpy as np
 from obspy import read
 import tdms_reader

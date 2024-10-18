@@ -23,14 +23,14 @@ from pathlib import Path
 
 root_directory = Path(r'\\wsl.localhost\Ubuntu\home\rlnd\projects\DiggerDAS')
 sub_directories = sorted([d for d in root_directory.rglob('*') if d.name == 'OUTPUT_FILES' and d.is_dir()])
-sub_directories =[sub_directories[6]]
+sub_directories =[root_directory/'base5/OUTPUT_FILES', root_directory/'hole5/OUTPUT_FILES']
 
 
 for directory in sub_directories:
 
     print(directory)
 
-    extension = ".semd"
+    extension = "BXZ.semd"
     file_list = sorted([file for file in directory.iterdir() if file.is_file() and file.name.endswith(extension)])
     
     out_folder = Path(file_list[0]).parents[2]
@@ -41,26 +41,11 @@ for directory in sub_directories:
     dx = 0.5 #m receiver spacing
     shotpoint_interval = 0.0 #m
 
-    #%%RESAMPLE, keep ~5x nyquist, max frequency to be retrieved 150 Hzd
+    #%%RESAMPLE, keep ~5x nyquist for max frequency to be retrieved
     
-    fs_resample = 40000 #Hz
+    fs_resample = 4000 #Hz
     data_resample = resample(data, fs, fs_resample)
-    
-    #%% PLOT FOR QC
-    
-    # cmap = "RdBu"
-    cmap = "Greys"
-    plt.ioff() 
-    
-    extent = [0, data_resample.shape[1]*dx, (data_resample.shape[0]/fs_resample) + t_start, t_start]
-    plt.imshow(data_resample, aspect='auto', extent=extent,  cmap=cmap)
-    plt.title("Seismic shot record (sampling rate fs={})".format(round(fs_resample,1)))
-    plt.xlabel("Receiver position (m)")
-    plt.ylabel("Two-way travel time (s)")
-    
-    out_fig =(out_folder/shot_name).with_suffix(".png")
-    plt.savefig(out_fig)
-    
+
     #%%
     #EXPORT deltaseis FORMAT TO SG2 TO BE USED IN VISTA
     shot_number = int(findall(r'\d+', shot_name)[0])
@@ -68,7 +53,7 @@ for directory in sub_directories:
     out_sgy =(out_folder/shot_name).with_suffix(".sgy")
     export_sgy(data_resample, fs_resample, dx, shot_number, shotpoint_interval, out_sgy)
 
-    #%% create video from the snapshot created by specfem
+    # #%% create video from the snapshot created by specfem
     create_video_from_images(directory, directory.parent/"movie.avi", fps=5, cut_percentage=60)
 
 
