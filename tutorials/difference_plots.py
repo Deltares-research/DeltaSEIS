@@ -7,10 +7,10 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 
 
-file_intact = Path(r"\\wsl.localhost\Ubuntu\home\rlnd\projects\DiggerDAS\base3.sgy")
-file_hole   = Path(r"\\wsl.localhost\Ubuntu\home\rlnd\projects\DiggerDAS\hole3.sgy")
+file_intact = Path(r"\\wsl.localhost\Ubuntu\home\rlnd\projects\DiggerDAS\segy\base3_BXX.sgy")
+file_hole   = Path(r"\\wsl.localhost\Ubuntu\home\rlnd\projects\DiggerDAS\segy\hole3_BXX.sgy")
 
-outfile = file_intact.parent/"difference_plot"
+outfile = file_intact.parent/"difference_plot_BXX"
 
 #use Segy editor to retrieve data and sampling rate
 intact = Segy_edit(file_intact)
@@ -29,11 +29,11 @@ seis_intact = Seismic(data_intact, fs_intact, dx)
 seis_hole = Seismic(data_hole, fs_hole, dx)
 
 #calculate agc
-seis_intact_agc = seis_intact.time_squared_gain(np.array(seis_intact.data))
-seis_hole_agc = seis_hole.time_squared_gain(np.array(seis_hole.data))
+seis_intact_T2 = seis_intact.time_squared_gain(np.array(seis_intact.data))
+seis_hole_T2 = seis_hole.time_squared_gain(np.array(seis_hole.data))
 
 # Compute the difference plot
-seis_diff = seis_intact_agc - seis_hole_agc
+seis_diff = seis_intact_T2 - seis_hole_T2
 
 #%% Create a figure with 3 subplots in a row
 
@@ -48,14 +48,14 @@ inch = 2.54
 fig = plt.figure(figsize=(14.6/inch, 7/inch))
 gs = gridspec.GridSpec(1, 4, width_ratios=[1, 1, 1, 0.15], wspace=0.2)  # Adjust wspace for desired spacing
 
-vmin = -0.01
-vmax = 0.01
+vmin = -0.002
+vmax = 0.002
 
-extent = [0, seis_intact_agc.shape[1]*dx, seis_intact_agc.shape[0]/fs_intact, 0]
+extent = [0, seis_intact_T2.shape[1]*dx, seis_intact_T2.shape[0]/fs_intact, 0]
 
 # Plot the first image (data_intact)
 ax1 = fig.add_subplot(gs[0])
-im1 = ax1.imshow(seis_intact_agc, cmap='viridis', aspect='auto', extent=extent, vmin=vmin, vmax=vmax, interpolation='kaiser')
+im1 = ax1.imshow(seis_intact_T2, cmap='viridis', aspect='auto', extent=extent, vmin=vmin, vmax=vmax, interpolation='kaiser')
 ax1.set_title('Data Intact', fontsize=10)
 ax1.set_ylabel("Two-way travel time (s)", fontsize=7)
 ax1.set_xlabel("Receiver position (m)", fontsize=7)
@@ -63,7 +63,7 @@ ax1.tick_params(axis='both', which='major', labelsize=7)
 
 # Plot the second image (data_hole)
 ax2 = fig.add_subplot(gs[1])
-im2 = ax2.imshow(seis_hole_agc, cmap='viridis', aspect='auto', extent=extent, vmin=vmin, vmax=vmax, interpolation='kaiser')
+im2 = ax2.imshow(seis_hole_T2, cmap='viridis', aspect='auto', extent=extent, vmin=vmin, vmax=vmax, interpolation='kaiser')
 ax2.set_title('Data Hole', fontsize=10)
 ax2.set_xlabel("Receiver position (m)", fontsize=7)
 ax2.tick_params(axis='both', which='major', labelsize=7)

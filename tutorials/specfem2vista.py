@@ -23,14 +23,14 @@ from pathlib import Path
 
 root_directory = Path(r'\\wsl.localhost\Ubuntu\home\rlnd\projects\DiggerDAS')
 sub_directories = sorted([d for d in root_directory.rglob('*') if d.name == 'OUTPUT_FILES' and d.is_dir()])
-sub_directories =[root_directory/'base5/OUTPUT_FILES', root_directory/'hole5/OUTPUT_FILES']
+sub_directories =[root_directory/'hole4/OUTPUT_FILES']
 
 
 for directory in sub_directories:
 
     print(directory)
 
-    extension = "BXZ.semd"
+    extension = "BXX.semd"
     file_list = sorted([file for file in directory.iterdir() if file.is_file() and file.name.endswith(extension)])
     
     out_folder = Path(file_list[0]).parents[2]
@@ -43,18 +43,18 @@ for directory in sub_directories:
 
     #%%RESAMPLE, keep ~5x nyquist for max frequency to be retrieved
     
-    fs_resample = 4000 #Hz
+    fs_resample = 40000 #Hz
     data_resample = resample(data, fs, fs_resample)
 
     #%%
     #EXPORT deltaseis FORMAT TO SG2 TO BE USED IN VISTA
     shot_number = int(findall(r'\d+', shot_name)[0])
     
-    out_sgy =(out_folder/shot_name).with_suffix(".sgy")
+    out_sgy =(out_folder / f"{shot_name}_BXX").with_suffix(".sgy")
     export_sgy(data_resample, fs_resample, dx, shot_number, shotpoint_interval, out_sgy)
 
     # #%% create video from the snapshot created by specfem
-    create_video_from_images(directory, directory.parent/"movie.avi", fps=5, cut_percentage=60)
+    #create_video_from_images(directory, directory.parent/"movie.avi", fps=5, cut_percentage=60)
 
 
     
