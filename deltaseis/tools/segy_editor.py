@@ -170,7 +170,7 @@ class Segy_edit:
         - RD new: 28992 (on land)
         """
 
-        self.crs = CRS(epsg)
+        self.crs = CRS.from_epsg(epsg)
 
     def set_output_scalar(self, manual_out_scalar):
         """
@@ -232,7 +232,7 @@ class Segy_edit:
         - ED50 UTM 31N: 23031 (North Sea)
         - RD new: 28992 (on land)
 
-        Last to didgets of projected systems refer to the UTM zone
+        Last two digets of projected systems refer to the UTM zone
         Refer to spatialreference.org for other epsg codes
         """
 
@@ -241,7 +241,7 @@ class Segy_edit:
             print(f"In-scalar of segy changed to {manual_in_scalar}")
 
         # apply the transformations
-        transformer = Transformer.from_crs(self.crs, epsg_out)
+        transformer = Transformer.from_crs(self.crs, CRS.from_epsg(epsg_out), always_xy=True)
 
         x, y = self.xy_to_real()
         x_transformed, y_transformed = transformer.transform(x,y)
@@ -257,13 +257,13 @@ class Segy_edit:
                 warnings.filterwarnings("error", category=RuntimeWarning)
 
                 try:
-                    if CRS(epsg_out).is_projected:
+                    if CRS.from_epsg(epsg_out).is_projected:
                         self.x = (x_transformed / out_factor).astype(np.int32)
                         self.y = (y_transformed / out_factor).astype(np.int32)
-                    elif CRS(epsg_out).is_geographic:
+                    elif CRS.from_epsg(epsg_out).is_geographic:
                         self.y = (3600 * x_transformed / out_factor).astype(np.int32)
                         self.x = (3600 * y_transformed / out_factor).astype(np.int32)
-                    self.crs = CRS(epsg_out)
+                    self.crs = CRS.from_epsg(epsg_out)
 
                 except:
                     raise ValueError(
@@ -490,6 +490,8 @@ class Segy_edit:
             path to the input ascii grid
         epsg_grid : int
             epsg code of the input ascii grid
+        horizon_name: str
+            name for the horizon, e.g. bathymetry
         velocity : int, optional
             The p-wave velocity to be used to convert the horizon to two-way time.
             The default is 1500 m/s
@@ -502,10 +504,10 @@ class Segy_edit:
             manual_in_scalar=self.out_scalar,
             apply_new_coordinates=False,
         )
-
-        # extrect horizon depth from the grid associated with each seismic navigation line point, also calculated horizon two-way time
+        
+        # extract horizon depth from the grid associated with each seismic navigation line point, also calculated horizon two-way time
         horizon_depths, horizon_two_way_times = get_grid(
-            grid_path, x_transformed, y_transformed, velocity
+            grid_path, y_transformed, x_transformed, velocity
         )
 
         setattr(self, horizon_name, horizon_two_way_times)
