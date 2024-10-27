@@ -24,7 +24,7 @@ cd deltaseis
 ```
 To create a conda enviroment and install deltaseis in it type:
 ```
-pixi run start
+pixi run install
 ```
 
 ## Update deltaseis
@@ -34,7 +34,7 @@ git pull
 ```
 And the same as with installation type:
 ```
-pixi run start
+pixi run install
 ```
 
 ## Tutorial
