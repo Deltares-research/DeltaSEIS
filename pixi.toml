@@ -7,7 +7,7 @@ channels = ["conda-forge"]
 platforms = ["win-64", "linux-64", "osx-arm64", "osx-64"]
 
 [tasks]
-start = "python -m pip install --no-deps --editable ."
+install = "python -m pip install --no-deps --editable ."
 notebook = "jupyter notebook ./tutorials/segy_editing.ipynb"
 
 [dependencies]
