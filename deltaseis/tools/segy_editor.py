@@ -48,56 +48,55 @@ class Segy_edit:
     """Segy editor for both tracedata and header meta data"""
 
     def __init__(self, segy_filepath):
-        self.segy_filepath, self.endian, self.data_sample_format = parse_segy(
-            segy_filepath
-        )
-
-        self.src = segyio.open(
-            self.segy_filepath, ignore_geometry=True, endian=self.endian
-        )
-
+        # parse the segy file
+        self.segy_filepath, self.endian, self.data_sample_format = parse_segy(segy_filepath)
+        
+        #open segy file with parsing results
+        self.src = segyio.open(self.segy_filepath, ignore_geometry=True, endian=self.endian)
         self.spec = segyio.tools.metadata(self.src)
         self.text_header = self.src.text[0]
         self.bin_header = self.src.bin
         self.trace_header = self.src.header
-        self.trace_data = [
-            tr.astype(np.dtype(self.data_sample_format)) for tr in self.src.trace
-        ]
+        self.trace_data = [tr.astype(np.dtype(self.data_sample_format)) for tr in self.src.trace]
 
+        # relevant trace header attribute scalars
         self.trace_number = len(self.src.trace)
-        self.shotpoint_numbers = self.src.attributes(17)[:]
-        self.ffid = self.src.attributes(9)[:]
-        self.cdp = self.src.attributes(21)[:]
         self.trace_samples = len(self.spec.samples)
-
         self.sampling_interval = self.src.bin[3217]
         self.sampling_rate = 1 / (self.sampling_interval * 1e-6)
-
-        self.trace_number_in_field_record = self.src.bin[3213]
         self.record_length = self.trace_samples * 1e-3 * self.sampling_interval
+        
+        self.scalar = self.src.attributes(71)[10][0]
+        self.factor = abs(1 / self.scalar) if self.scalar < 0 else self.scalar
+        self.scalar_vertical = self.src.attributes(69)[10][0]
+        self.factor_vertical = abs(1 / self.scalar_vertical) if self.scalar_vertical < 0 else self.scalar_vertical
+                
+        self.trace_number_in_field_record = self.src.bin[3213]
+        self.nominal_fold = self.src.bin[3227]
 
+        #relevant trace header attribute lists
+        self.trace_sequence = self.src.attributes(1)[:]
+        self.ffid = self.src.attributes(9)[:]
+        self.channel_numbers = self.src.attributes(13)[:]
+        self.shotpoint_numbers = self.src.attributes(17)[:]
+        self.cdps = self.src.attributes(21)[:]
+        self.fold = self.src.attributes(33)[:]
+        self.offsets = self.src.attributes(37)[:]
+        self.rz = self.src.attributes(41)[:]
+        self.z = self.src.attributes(45)[:]
         self.x = self.src.attributes(73)[:]
         self.y = self.src.attributes(77)[:]
-        self.z = self.src.attributes(45)[:]
-        self.rx = self.src.attributes(81)[:]
-        self.ry = self.src.attributes(85)[:]
-        self.rz = self.src.attributes(41)[:]
-
-        self.scalar = self.src.attributes(71)[10][0]
-        self.out_scalar = self.scalar
-        self.vertical_scalar = self.src.attributes(69)[10][0]
-        self.out_vertical_scalar = self.vertical_scalar
-
         self.groupx = self.src.attributes(81)[:]
         self.groupy = self.src.attributes(85)[:]
-
         self.cdpx = self.src.attributes(181)[:]
-        self.cdpx = self.src.attributes(185)[:]
-
+        self.cdpy = self.src.attributes(185)[:]
+        
+        #horizons
         self.horizons = {}
         self.shift_samples = np.zeros(self.trace_number)
         self.plot_number = 0
 
+        # coordinate reference system for horizontal and vertical coordinates
         self.crs = None
         self.crs_vertical = None
         print('Warning: CRS is not defined, please define with set_crs() if needed')
@@ -165,6 +164,7 @@ class Segy_edit:
         self.groupx = self.groupx[order]
         self.groupy = self.groupy[order]
         self.trace_header = [self.trace_header[i] for i in order]
+        self.trace_sequence = [self.trace_sequence[i] for i in order]
 
     def resample(self, new_sampling_rate):
         """Resamples the seismic data when writing to file"""
@@ -188,20 +188,7 @@ class Segy_edit:
         """
         self.spec.endian = endian
 
-    def set_input_scalar(self, manual_scalar):
-        """
-        Set the coordinate scalar if not correct in the segy (e.g. zero)
-        """
-        self.scalar = manual_scalar
-        self.out_scalar = self.scalar
-
-    def set_vertical_input_scalar(self, manual_vertical_scalar):
-        """
-        Set the coordinate scalar if not correct in the segy (e.g. zero)
-        """
-        self.vertical_scalar = manual_vertical_scalar
-        self.out_vertical_scalar = self.vertical_scalar
-
+    
     def set_crs(self,epsg):
         """
         Change crs attribute based on epsg code
@@ -243,41 +230,19 @@ class Segy_edit:
 
         self.crs_vertical = CRS.from_epsg(epsg_vertical)
 
-    def set_output_scalar(self, manual_out_scalar):
+    def set_scalar(self, manual_scalar):
         """
         Set the coordinate scalar if not correct in the segy (e.g. zero)
         """
-        self.out_scalar = manual_out_scalar
+        self.scalar = manual_scalar
+        self.factor = abs(1 / self.scalar) if self.scalar < 0 else self.scalar
 
-    def set_vertical_output_scalar(self, manual_vertical_out_scalar):
+    def set_scalar_vertical(self, manual_scalar_vertical):
         """
         Set the vertical scalar if not correct in the segy (e.g. zero)
         """
-        self.vertical_out_scalar = manual_vertical_out_scalar
-
-    def scalar_to_factor(self, scalar):
-        """
-        Converts a segy coordinate scalar value to a factor based on its value.
-        Parameters:
-        scalar (int or float): The scalar value to be converted.
-        Returns:
-        float: The factor derived from the scalar value.
-        - If the scalar is 0, the factor is set to 1 and a warning is printed.
-        - If the scalar is greater than 0, the factor is equal to the scalar.
-        - If the scalar is less than 0, the factor is the negative reciprocal of the scalar.
-        """
-
-        if self.scalar == 0:
-                factor = 1
-                print('Warning: scalar is 0, interpreted as 1, make sure this is correct or change mannually')
-        elif self.scalar > 0:
-                factor = self.scalar
-        elif self.scalar < 0:
-                factor = -1 / self.scalar
-        
-        return factor
-
-
+        self.scalar_vertical = manual_scalar_vertical
+        self.factor_vertical = abs(1 / self.scalar_vertical) if self.scalar_vertical < 0 else self.scalar_vertical
 
     def xy_to_real(self):
         """
@@ -299,28 +264,24 @@ class Segy_edit:
         if not self.crs:
             raise ValueError("CRS is not defined, cannot perform function - first use set_crs() to define CRS")
 
+        if self.crs.is_geographic:
+            x = self.factor * self.y / 3600
+            y = self.factor * self.x / 3600
         else:
-            # correct coordinates with scalar, assuming 0 should be 1:
-            factor = self.scalar_to_factor(self.scalar)
+            x = self.factor * self.x
+            y = self.factor * self.y
 
-            if self.crs.is_geographic:
-                x = factor * self.y / 3600
-                y = factor * self.x / 3600
-            else:
-                x = factor * self.x
-                y = factor * self.y
-
-            return x,y
+        return x,y
     
-    def add_coordinates(self, x, y, rx, ry, z=None, rz=None):
+    def add_coordinates(self, x, y, groupx, groupy, z=None, rz=None):
         """
         Adds coordinates to the SEGY file after validating necessary parameters.
         Parameters:
         x (array-like): X coordinates.
         y (array-like): Y coordinates.
         z (array-like): Z coordinates.
-        rx (array-like): Receiver X coordinates.
-        ry (array-like): Receiver Y coordinates.
+        groupx (array-like): Receiver X coordinates.
+        groupy (array-like): Receiver Y coordinates.
         rz (array-like): Receiver Z coordinates.
         Raises:
         ValueError: If scalar, vertical scalar, CRS, or vertical CRS are not defined.
@@ -331,10 +292,10 @@ class Segy_edit:
 
 
         if not self.scalar:
-            raise ValueError("Scalar is not defined, cannot add coordinates - first use set_input_scalar() to define scalar")
+            raise ValueError("Scalar is not defined, cannot add coordinates - first use set_scalar() to define scalar")
 
-        if not self.vertical_scalar:
-            raise ValueError("Vertical scalar is not defined, cannot add coordinates - first use set_vertical_input_scalar() to define vertical scalar")
+        if not self.scalar_vertical:
+            raise ValueError("Vertical scalar is not defined, cannot add coordinates - first use set_scalar_vertical() to define vertical scalar")
             return
         
         if not self.crs:
@@ -342,32 +303,29 @@ class Segy_edit:
         
         if not self.crs_vertical:
             raise ValueError("Vertical CRS is not defined, cannot perform function - first use set_vertical crs() to define vertical CRS")
-        
-        factor = self.scalar_to_factor(self.scalar)
-        factor_vertical = self.scalar_to_factor(self.vertical_scalar)
-        
+               
         if self.crs.is_geographic:
-            self.x = (3600 * x / factor).astype(np.int32)
-            self.y = (3600 * y / factor).astype(np.int32)
-            self.rx = (3600 * rx / factor).astype(np.int32)
-            self.ry = (3600 * ry / factor).astype(np.int32)
+            self.x = (3600 * x / self.factor).astype(np.int32)
+            self.y = (3600 * y / self.factor).astype(np.int32)
+            self.groupx = (3600 * groupx / self.factor).astype(np.int32)
+            self.groupy = (3600 * groupy / self.factor).astype(np.int32)
             
         else:
-            self.x = (x / factor).astype(np.int32)
-            self.y = (y / factor).astype(np.int32)
-            self.rx = (rx / factor).astype(np.int32)
-            self.ry = (ry / factor).astype(np.int32)
+            self.x = (x / self.factor).astype(np.int32)
+            self.y = (y / self.factor).astype(np.int32)
+            self.groupx = (groupx / self.factor).astype(np.int32)
+            self.groupy = (groupy / self.factor).astype(np.int32)
         
         if z is not None:
-            self.z = (z / factor_vertical).astype(np.int32)
+            self.z = (z / self.factor_vertical).astype(np.int32)
 
         if rz is not None:
-            self.rz = (rz / factor_vertical).astype(np.int32)
+            self.rz = (rz / self.factor_vertical).astype(np.int32)
        
         
 
     def transform_coordinates(
-        self, epsg_out, manual_in_scalar=0, apply_new_coordinates=True
+        self, epsg_out, apply_new_coordinates=True
     ):
         """
         Transform the navigation coordinates from the segy file
@@ -385,10 +343,6 @@ class Segy_edit:
         Refer to spatialreference.org for other epsg codes
         """
 
-        if manual_in_scalar != 0:
-            scalar = self.set_input_scalar(manual_in_scalar)
-            print(f"In-scalar of segy changed to {manual_in_scalar}")
-
         # apply the transformations
         transformer = Transformer.from_crs(self.crs, CRS.from_epsg(epsg_out), always_xy=True)
 
@@ -397,26 +351,22 @@ class Segy_edit:
 
         # write back into seg-y header required format
         if apply_new_coordinates == True:
-            if self.out_scalar > 0:
-                out_factor = self.out_scalar
-            elif self.out_scalar < 0:
-                out_factor = -1 / self.out_scalar
-
+            
             with warnings.catch_warnings():
                 warnings.filterwarnings("error", category=RuntimeWarning)
 
                 try:
                     if CRS.from_epsg(epsg_out).is_projected:
-                        self.x = (x_transformed / out_factor).astype(np.int32)
-                        self.y = (y_transformed / out_factor).astype(np.int32)
+                        self.x = (x_transformed / self.factor).astype(np.int32)
+                        self.y = (y_transformed / self.factor).astype(np.int32)
                     elif CRS.from_epsg(epsg_out).is_geographic:
-                        self.y = (3600 * x_transformed / out_factor).astype(np.int32)
-                        self.x = (3600 * y_transformed / out_factor).astype(np.int32)
+                        self.y = (3600 * x_transformed / self.factor).astype(np.int32)
+                        self.x = (3600 * y_transformed / self.factor).astype(np.int32)
                     self.crs = CRS.from_epsg(epsg_out)
 
                 except:
                     raise ValueError(
-                        "Coordinate transformation failed, check if the epsg codes are correct or set a different out_scalar"
+                        "Coordinate transformation failed, check if the epsg codes are correct or set a different scalar"
                     )
         else: # apply_new_coordinates == False
             return x_transformed, y_transformed
@@ -650,7 +600,6 @@ class Segy_edit:
         # transform the seismic navigation coordinates to match that of the grid_file (fastest, because less data point)
         x_transformed, y_transformed = self.transform_coordinates(
             epsg_grid,
-            manual_in_scalar=self.out_scalar,
             apply_new_coordinates=False,
         )
         
@@ -1010,21 +959,30 @@ class Segy_edit:
             dst.bin[3221] = len(self.spec.samples)
             dst.bin[3213] = self.trace_number_in_field_record
             dst.bin[3217] = self.sampling_interval
+            dst.bin[3227] = self.nominal_fold
 
             for i in range(self.trace_number):
-                dst.header[i][13] = self.trace_number_in_field_record
+                
+                dst.trace[i] = self.trace_data[i]
+
+                dst.header[i][1] = self.trace_sequence[i]
+                dst.header[i][5] = self.trace_sequence[i]
+                dst.header[i][9] = self.ffid[i]
+                dst.header[i][13] = self.channel_numbers[i]
                 dst.header[i][17] = self.shotpoint_numbers[i]
-                dst.header[i][69] = self.out_vertical_scalar
-                dst.header[i][71] = self.out_scalar
+                dst.header[i][21] = self.cdps[i]
+                dst.header[i][33] = self.fold[i]
+                dst.header[i][37] = self.offsets[i]
+                dst.header[i][41] = self.rz[i]
+                dst.header[i][45] = self.z[i]
+                dst.header[i][69] = self.scalar_vertical
+                dst.header[i][71] = self.scalar
                 dst.header[i][73] = self.x[i]
                 dst.header[i][77] = self.y[i]
-                dst.header[i][45] = self.z[i] 
-                dst.header[i][81] = self.rx[i]
-                dst.header[i][85] = self.ry[i]
-                dst.header[i][41] = self.rz[i]   
                 dst.header[i][81] = self.groupx[i]
                 dst.header[i][85] = self.groupy[i]
-                dst.trace[i] = self.trace_data[i]
+                dst.header[i][181] = self.cdpx[i]
+                dst.header[i][185] = self.cdpy[i]
 
             if "_TEMPORARY" in str(self.segy_filepath):
                 self.src.close()
@@ -1051,7 +1009,7 @@ class Segy_edit:
                 im = self.trace_data[i * 3 + 1]
                 re = self.trace_data[i * 3 + 2]
 
-                # Perform Fourier transform on the real and imaginary signals
+                # Perform Fourier transform on the real and imaginagroupy signals
                 fft_real = np.fft.fft(re)
                 fft_imag = np.fft.fft(im)
 

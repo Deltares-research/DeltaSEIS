@@ -20,10 +20,10 @@ segy_outfile = segy_file.with_stem(segy_file.stem + "_TUTORIAL")
 # set the instance for the bergen segy file
 bergen = Segy_edit(segy_file)
 
-bergen.set_record_length(60)
+bergen.set_record_length(45)
 bergen.set_endian('little')
 bergen.fix_navigation_median()
-bergen.set_input_scalar(-100)
+bergen.set_scalar(-100)
 
 bergen.set_crs(4326)
 bergen.transform_coordinates(32631)
@@ -49,7 +49,7 @@ bergen.plot(save_plot=True, clip=0.1)
 bergen.set_trace_number_in_field_record()
 bergen.renumber_shotpoints()
 bergen.copy_source_coordinates_to_group()
-bergen.set_output_scalar(-1000)
+bergen.set_scalar(-1000)
 
 # write to segy
 bergen.write(segy_outfile)

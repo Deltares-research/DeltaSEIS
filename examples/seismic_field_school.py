@@ -37,11 +37,8 @@ segy_outfile = segy_file.with_stem(segy_file.stem + "_SORTED")
 nav_file = data_folder / "sfs_GNSS_geophones.txt"
 far_shots_file = data_folder / "sfs_GNSS_SHOTS_FAR_OFFSET.txt"
 
-
 #%% set the instance for the bergen segy file
 sfs = Segy_edit(segy_file)
-sfs.set_endian('little')
-
 
 #%% set the manual order for the segy file to get it correctly sorted
 shot_order = (
@@ -58,14 +55,15 @@ manual_order = [shot + i * len(shot_order) for i in range(number_of_shots) for s
 
 # apply the sorting
 sfs.sort_traces(manual_order=manual_order)
+sfs.trace_sequence.sort()
 
 #%% add coordinates and elevation to the trace headers
 
 sfs.set_crs(28992)          # set to RD
 sfs.set_crs_vertical(7415)  # set to NAP
 
-sfs.set_output_scalar(-1000)            # set to millimeter precision
-sfs.set_vertical_output_scalar(-1000)   # set to millimeter precision
+sfs.set_scalar(-1000)            # set to millimeter precision
+sfs.set_scalar_vertical(-1000)   # set to millimeter precision
 
 # get the coordinates from the navigation file
 coordinates = np.genfromtxt(nav_file, delimiter=',', skip_header=1, usecols=range(4))
@@ -76,21 +74,6 @@ z = rz
 
 # compute 2 m offsets for the shot positions
 x_offset, y_offset = compute_offset_points(rx, ry, crossline_distance=2, inline_distance=0)
-#OFFSETS ARE NOT CORRECT YET, THERE IS AN INLINE EFFECT AND ONE POINT MISSES
-
-# Quick QC plot
-plt.figure(figsize=(7, 8))
-
-# Plot receiver and shot points
-plt.plot(rx, ry, 'k.', label='receiver points')
-plt.plot(x_offset, y_offset, 'r.', label='shot points')
-plt.grid()
-plt.legend()
-plt.title(f'Receiver and Shot Points (EPSG:{sfs.crs.to_epsg()})')
-plt.xlabel('X Coordinate')
-plt.ylabel('Y Coordinate')
-plt.axis('equal')
-plt.show()
 
 #%% now add the coordinates to the segy trace headers
 number_of_lines = 2
@@ -103,26 +86,42 @@ x_header = np.take(x_offset, sfs.ffid - ffid_start_of_line)
 y_header = np.take(y_offset, sfs.ffid - ffid_start_of_line)
 z_header = np.take(z, sfs.ffid - ffid_start_of_line)
 
-sfs.add_coordinates(x_header, y_header, z_header, rx_header, ry_header, rz_header)
+sfs.add_coordinates(x_header, y_header, rx_header, ry_header, z_header, rz_header)
+#scalars are not correct yet, need to be set to -1000??
 
+#trace header math
+sfs.ffid = sfs.ffid + 1000 # set first to 1000 to distinguish from original shotpoints (industry standard)
+offsets = np.sqrt((x_header - rx_header)**2 + (y_header - ry_header)**2) # set offset to 2 m
 
-sfs.set_channels(channel_list)
-sfs.set_offsets(offsets_list)
-sfs.set_cdps(cdp, cdp_x, cdp_y)
+cdpx = (x_header + rx_header) / 2
+cdpy = (y_header + ry_header) / 2
 
+#cdp number calculation
+cdps = np.sqrt((cdpx - cdpx[0])**2 + (cdpy - cdpy[0])**2) + 1
+sfs.cdps = np.round(cdps).astype(np.int32)
 
-#
-#%%
-#sfs.select
+#%%QC plot
+plt.figure(figsize=(16, 20))
 
+# Plot receiver and shot points
+plt.plot(rx, ry, 'k.', label='receiver points')
+plt.plot(x_offset, y_offset, 'r.', label='shot points')
+plt.plot(cdpx, cdpy, 'b.', label='cdp points')
+plt.grid()
+plt.legend()
+plt.title(f'Receiver and Shot Points (EPSG:{sfs.crs.to_epsg()})')
+plt.xlabel('X Coordinate')
+plt.ylabel('Y Coordinate')
+plt.axis('equal')
 
-#%% other header math might be required, e.g reset shotpoints? calc offsets, cdps (look in radexpro manual)
-
-sfs.write(segy_outfile)
-
-
-
+# cdp numbers are not continuous, need to be fixed
+# sfs.select? make function e.g. only select traces with sfs.channals< 49
 # detail: use compute offset point to get 10 cm offset for 2nd line
-# sfs select traces to split different lines
-# coordinate scalar should be made easier (in/out etc, just use set_ ?)
 # also make a more regular shot interval (exact staright line, exact 2m spacing, exact 2 m offset to compare)
+# also do the same for the far shots, use far shots file to get the coordinates and offsets (refraction seismic)
+
+# write as segy file header format
+sfs.offsets = np.round(offsets / sfs.factor).astype(np.int32)
+sfs.cdpx = np.round(cdpx / sfs.factor).astype(np.int32)
+sfs.cdpy = np.round(cdpy / sfs.factor).astype(np.int32)
+sfs.write(segy_outfile)
