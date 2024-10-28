@@ -8,6 +8,7 @@ to segy. The main operations it performs are:
     - transform coordinates, fix coordinate spikes
     - vertical trace corrections, e.g. for bulk shift or tide and senosor depth corrections
     (add other functions)
+    - add transform_vertical for similar to transform_coordinates but for vertical tranformations (self.crs_vertical already exiss)
 
 
 lower priority
@@ -77,8 +78,15 @@ class Segy_edit:
 
         self.x = self.src.attributes(73)[:]
         self.y = self.src.attributes(77)[:]
+        self.z = self.src.attributes(45)[:]
+        self.rx = self.src.attributes(81)[:]
+        self.ry = self.src.attributes(85)[:]
+        self.rz = self.src.attributes(41)[:]
+
         self.scalar = self.src.attributes(71)[10][0]
         self.out_scalar = self.scalar
+        self.vertical_scalar = self.src.attributes(69)[10][0]
+        self.out_vertical_scalar = self.vertical_scalar
 
         self.groupx = self.src.attributes(81)[:]
         self.groupy = self.src.attributes(85)[:]
@@ -91,6 +99,7 @@ class Segy_edit:
         self.plot_number = 0
 
         self.crs = None
+        self.crs_vertical = None
         print('Warning: CRS is not defined, please define with set_crs() if needed')
 
     def fix_multiple_scalars(self):
@@ -186,6 +195,13 @@ class Segy_edit:
         self.scalar = manual_scalar
         self.out_scalar = self.scalar
 
+    def set_vertical_input_scalar(self, manual_vertical_scalar):
+        """
+        Set the coordinate scalar if not correct in the segy (e.g. zero)
+        """
+        self.vertical_scalar = manual_vertical_scalar
+        self.out_vertical_scalar = self.vertical_scalar
+
     def set_crs(self,epsg):
         """
         Change crs attribute based on epsg code
@@ -206,11 +222,62 @@ class Segy_edit:
 
         self.crs = CRS.from_epsg(epsg)
 
+    def set_crs_vertical(self,epsg_vertical):
+        """
+        Change crs_vertical attribute based on epsg code
+
+        Parameters
+        ----------
+            - epsg_vertical : int
+                epsg code for vertical reference system
+
+        Commonly used projections for the Netherlands
+        - Normal Amsterdams Peil (NAP): 7415            
+        - Dutch Vertical Reference 1990 (DVR90): 7416
+        - Mean Seal Level (MSL): 5715
+        - Lowest Astronomical Tide (LAT): 5777
+        - European Vertical Reference System 2000 (EVRS): 6258
+        - Earth Gravitational Model 1996 (EGM96): 5773
+  
+        """
+
+        self.crs_vertical = CRS.from_epsg(epsg_vertical)
+
     def set_output_scalar(self, manual_out_scalar):
         """
-        Set the coordinate scale if not correct in the segy (e.g. zero)
+        Set the coordinate scalar if not correct in the segy (e.g. zero)
         """
         self.out_scalar = manual_out_scalar
+
+    def set_vertical_output_scalar(self, manual_vertical_out_scalar):
+        """
+        Set the vertical scalar if not correct in the segy (e.g. zero)
+        """
+        self.vertical_out_scalar = manual_vertical_out_scalar
+
+    def scalar_to_factor(self, scalar):
+        """
+        Converts a segy coordinate scalar value to a factor based on its value.
+        Parameters:
+        scalar (int or float): The scalar value to be converted.
+        Returns:
+        float: The factor derived from the scalar value.
+        - If the scalar is 0, the factor is set to 1 and a warning is printed.
+        - If the scalar is greater than 0, the factor is equal to the scalar.
+        - If the scalar is less than 0, the factor is the negative reciprocal of the scalar.
+        """
+
+        if self.scalar == 0:
+                factor = 1
+                print('Warning: scalar is 0, interpreted as 1, make sure this is correct or change mannually')
+        elif self.scalar > 0:
+                factor = self.scalar
+        elif self.scalar < 0:
+                factor = -1 / self.scalar
+        
+        return factor
+
+
 
     def xy_to_real(self):
         """
@@ -230,17 +297,11 @@ class Segy_edit:
         """
 
         if not self.crs:
-            print("CRS is not defined, cannot perform function - first use set_crs() to define CRS")
+            raise ValueError("CRS is not defined, cannot perform function - first use set_crs() to define CRS")
 
         else:
             # correct coordinates with scalar, assuming 0 should be 1:
-            if self.scalar == 0:
-                factor = 1
-                print('Warning: scalar is 0, interpreted as 1, make sure this is correct or change mannually')
-            elif self.scalar > 0:
-                factor = self.scalar
-            elif self.scalar < 0:
-                factor = -1 / self.scalar
+            factor = self.scalar_to_factor(self.scalar)
 
             if self.crs.is_geographic:
                 x = factor * self.y / 3600
@@ -250,6 +311,60 @@ class Segy_edit:
                 y = factor * self.y
 
             return x,y
+    
+    def add_coordinates(self, x, y, rx, ry, z=None, rz=None):
+        """
+        Adds coordinates to the SEGY file after validating necessary parameters.
+        Parameters:
+        x (array-like): X coordinates.
+        y (array-like): Y coordinates.
+        z (array-like): Z coordinates.
+        rx (array-like): Receiver X coordinates.
+        ry (array-like): Receiver Y coordinates.
+        rz (array-like): Receiver Z coordinates.
+        Raises:
+        ValueError: If scalar, vertical scalar, CRS, or vertical CRS are not defined.
+        Notes:
+        - Scalars and CRS must be set before calling this method.
+        - Coordinates are scaled according to the defined scalars and CRS.
+        """
+
+
+        if not self.scalar:
+            raise ValueError("Scalar is not defined, cannot add coordinates - first use set_input_scalar() to define scalar")
+
+        if not self.vertical_scalar:
+            raise ValueError("Vertical scalar is not defined, cannot add coordinates - first use set_vertical_input_scalar() to define vertical scalar")
+            return
+        
+        if not self.crs:
+            raise ValueError("CRS is not defined, cannot perform function - first use set_crs() to define CRS")
+        
+        if not self.crs_vertical:
+            raise ValueError("Vertical CRS is not defined, cannot perform function - first use set_vertical crs() to define vertical CRS")
+        
+        factor = self.scalar_to_factor(self.scalar)
+        factor_vertical = self.scalar_to_factor(self.vertical_scalar)
+        
+        if self.crs.is_geographic:
+            self.x = (3600 * x / factor).astype(np.int32)
+            self.y = (3600 * y / factor).astype(np.int32)
+            self.rx = (3600 * rx / factor).astype(np.int32)
+            self.ry = (3600 * ry / factor).astype(np.int32)
+            
+        else:
+            self.x = (x / factor).astype(np.int32)
+            self.y = (y / factor).astype(np.int32)
+            self.rx = (rx / factor).astype(np.int32)
+            self.ry = (ry / factor).astype(np.int32)
+        
+        if z is not None:
+            self.z = (z / factor_vertical).astype(np.int32)
+
+        if rz is not None:
+            self.rz = (rz / factor_vertical).astype(np.int32)
+       
+        
 
     def transform_coordinates(
         self, epsg_out, manual_in_scalar=0, apply_new_coordinates=True
@@ -899,9 +1014,14 @@ class Segy_edit:
             for i in range(self.trace_number):
                 dst.header[i][13] = self.trace_number_in_field_record
                 dst.header[i][17] = self.shotpoint_numbers[i]
+                dst.header[i][69] = self.out_vertical_scalar
                 dst.header[i][71] = self.out_scalar
                 dst.header[i][73] = self.x[i]
                 dst.header[i][77] = self.y[i]
+                dst.header[i][45] = self.z[i] 
+                dst.header[i][81] = self.rx[i]
+                dst.header[i][85] = self.ry[i]
+                dst.header[i][41] = self.rz[i]   
                 dst.header[i][81] = self.groupx[i]
                 dst.header[i][85] = self.groupy[i]
                 dst.trace[i] = self.trace_data[i]
