@@ -62,6 +62,7 @@ class Segy_edit:
         # relevant trace header attribute scalars
         self.trace_number = len(self.src.trace)
         self.trace_samples = len(self.spec.samples)
+        self.indices = np.arange(self.trace_number)
         self.sampling_interval = self.src.bin[3217]
         self.sampling_rate = 1 / (self.sampling_interval * 1e-6)
         self.record_length = self.trace_samples * 1e-3 * self.sampling_interval
@@ -73,6 +74,8 @@ class Segy_edit:
                 
         self.trace_number_in_field_record = self.src.bin[3213]
         self.nominal_fold = self.src.bin[3227]
+        self.number_of_shots = len(np.unique(self.src.attributes(9)[:]))
+        self.number_of_channels = len(np.unique(self.src.attributes(13)[:]))
 
         #relevant trace header attribute lists
         self.trace_sequence = self.src.attributes(1)[:]
@@ -945,6 +948,40 @@ class Segy_edit:
         plt.grid()
         plt.axis('equal')
 
+    def select_traces(self, trace_numbers):
+        """
+        Selects traces from the seismic data based on a list of trace numbers
+
+        Parameters
+        ----------
+        trace_numbers : list
+            List of trace numbers to select
+        """
+
+        self.trace_data = [self.trace_data[i] for i in trace_numbers]
+        self.trace_number = len(self.trace_data)
+        self.spec.tracecount = len(self.trace_data)
+
+        self.shotpoint_numbers = self.shotpoint_numbers[trace_numbers]
+        self.groupx = self.groupx[trace_numbers]
+        self.groupy = self.groupy[trace_numbers]
+        self.x = self.x[trace_numbers]
+        self.y = self.y[trace_numbers]
+        self.renumber_shotpoints()
+
+    def select_traces(self, selection_indices):
+        """
+        Selects traces from the seismic data based on a list of trace numbers. The selection is applied upon writing.
+
+        Parameters
+        ----------
+        selection_indices : list
+            List of trace numbers to select 
+        """
+        self.indices = selection_indices
+        self.spec.tracecount = len(self.indices)
+        
+
     def write(self, segy_outpath):
         # cast trace data to correct format
         self.trace_data = np.array(self.trace_data).astype(
@@ -961,28 +998,28 @@ class Segy_edit:
             dst.bin[3217] = self.sampling_interval
             dst.bin[3227] = self.nominal_fold
 
-            for i in range(self.trace_number):
+            for i, index in enumerate(self.indices):
                 
-                dst.trace[i] = self.trace_data[i]
+                dst.trace[i] = self.trace_data[index]
 
-                dst.header[i][1] = self.trace_sequence[i]
-                dst.header[i][5] = self.trace_sequence[i]
-                dst.header[i][9] = self.ffid[i]
-                dst.header[i][13] = self.channel_numbers[i]
-                dst.header[i][17] = self.shotpoint_numbers[i]
-                dst.header[i][21] = self.cdps[i]
-                dst.header[i][33] = self.fold[i]
-                dst.header[i][37] = self.offsets[i]
-                dst.header[i][41] = self.rz[i]
-                dst.header[i][45] = self.z[i]
+                dst.header[i][1] = self.trace_sequence[index]
+                dst.header[i][5] = self.trace_sequence[index]
+                dst.header[i][9] = self.ffid[index]
+                dst.header[i][13] = self.channel_numbers[index]
+                dst.header[i][17] = self.shotpoint_numbers[index]
+                dst.header[i][21] = self.cdps[index]
+                dst.header[i][33] = self.fold[index]
+                dst.header[i][37] = self.offsets[index]
+                dst.header[i][41] = self.rz[index]
+                dst.header[i][45] = self.z[index]
                 dst.header[i][69] = self.scalar_vertical
                 dst.header[i][71] = self.scalar
-                dst.header[i][73] = self.x[i]
-                dst.header[i][77] = self.y[i]
-                dst.header[i][81] = self.groupx[i]
-                dst.header[i][85] = self.groupy[i]
-                dst.header[i][181] = self.cdpx[i]
-                dst.header[i][185] = self.cdpy[i]
+                dst.header[i][73] = self.x[index]
+                dst.header[i][77] = self.y[index]
+                dst.header[i][81] = self.groupx[index]
+                dst.header[i][85] = self.groupy[index]
+                dst.header[i][181] = self.cdpx[index]
+                dst.header[i][185] = self.cdpy[index]
 
             if "_TEMPORARY" in str(self.segy_filepath):
                 self.src.close()
