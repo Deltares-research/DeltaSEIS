@@ -7,13 +7,13 @@ TODO: this script should become part of export_seismic_pickle
 
 '''
 
-from deltaseis import Segy_edit
+from deltaseis import Segy_edit, Seismic
 import pickle
 import numpy as np
 from pathlib import Path
 
-folder = Path(r'D:\Projects\PES waal\segy\segy_full_renamed')        
-segy_files = txt_files = folder.glob('*.sgy')
+folder = Path(r'D:\Projects\PES waal\segy\segy_full_renamed\S2')        
+segy_files = txt_files = folder.glob('*.segy')
 segy_files = [Path(path) for path in segy_files]
 
 #%%
@@ -22,11 +22,16 @@ def export_pickle(infile):
 
     outfile = infile.with_suffix(".npy")
     print(outfile)
-    seismic = Segy_edit(infile)
-    print(np.array(seismic.trace_data).shape)
+    s = Segy_edit(infile)
+    print(np.array(s.trace_data).shape)
+
+    seismic = Seismic(s.trace_data, s.sampling_rate, s.spi.mean())
+    print(s.sampling_rate)
+    print(s.spi)
+    print(s.spi.mean())
 
     with open(outfile, 'wb') as f:
-        np.save(f, np.array(seismic.trace_data))
+        np.save(f, np.array(seismic.data))
 
 
 for segy_file in segy_files:

@@ -16,7 +16,7 @@ from matplotlib import pyplot as plt
 from deltaseis import Segy_edit
 
 
-def merge_segys(filelist, make_plot=True):
+def merge_segys(filelist, make_plot=True, record_length=None):
     """
     Returns one Segy_edit() object of a list of segy files. The segy's are merged based on their order in the list.
 
@@ -45,6 +45,9 @@ def merge_segys(filelist, make_plot=True):
     for file in filelist:
         print(f"reading file {file}")
         s = Segy_edit(file)
+
+        if record_length is not None:
+            s.set_record_length(record_length)
         x = np.append(x, s.x)
         y = np.append(y, s.y)
         groupx = np.append(groupx, s.groupx)

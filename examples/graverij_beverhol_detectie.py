@@ -125,4 +125,4 @@ fig.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.15)
 plt.show()
 
 # save the figure with high resolution
-fig.savefig(outfile, dpi=600)
+#fig.savefig(outfile, dpi=600)

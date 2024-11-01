@@ -73,7 +73,7 @@ extent = [0, seis_hole_agc.shape[1] * dx, seis_hole_agc.shape[0] / sampling_rate
 
 # Plot the data on ax1
 im1 = ax1.imshow(seis_hole_agc, cmap='viridis', aspect='auto', extent=extent, vmin=vmin, vmax=vmax)
-ax1.set(title='Graafgeluid data', xlabel='Receiver position (m)', ylabel='Two-way travel time (s)')
+ax1.set(title='Graafgeluid data', xlabel='Receiver position (m)', ylabel='One-way travel time (s)')
 ax1.tick_params(axis='both', labelsize=7)
 
 # Plot additional data on ax2 (replace with your actual data)

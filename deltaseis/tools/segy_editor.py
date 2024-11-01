@@ -93,6 +93,7 @@ class Segy_edit:
         self.groupy = self.src.attributes(85)[:]
         self.cdpx = self.src.attributes(181)[:]
         self.cdpy = self.src.attributes(185)[:]
+        self.spi = np.sqrt(np.diff(self.x)**2 + np.diff(self.y)**2)
         
         #horizons
         self.horizons = {}

@@ -3,7 +3,7 @@
 [![Lifecycle: experimental](https://lifecycle.r-lib.org/articles/figures/lifecycle-experimental.svg)](https://lifecycle.r-lib.org/articles/stages.html)
 [![Formatting: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/charliermarsh/ruff)
 
-The Geophysical Modelling and Processing Toolbox (deltaseis) package is designed to handle all common formats of geophysical data (for now only seismic data). It provides selection, editing, processing, analysis, and export methods that can be applied generically to the loaded data. It is designed to connect with other Deltares developments such as [iMod](https://gitlab.com/deltares/imod) and [DataFusionTools](https://bitbucket.org/DeltaresGEO/datafusiontools/src/master/).
+The Deltares Seismic (DeltaSEIS) package is designed to handle all common formats of seismic data. This includes conventional seismic data, DAS fiber optic and simulated data. It provides selection, editing, processing, analysis, and export methods that can be applied generically to the loaded data. It is designed to connect with other Deltares developments such as [iMod](https://gitlab.com/deltares/imod) and [DataFusionTools](https://bitbucket.org/DeltaresGEO/datafusiontools/src/master/).
 
 Both the **Seismic** and **Segy_editor** classes make heavey use of the [segyio](https://segyio.readthedocs.io/en/latest/index.html) and [obspy](https://docs.obspy.org/) packages as well as numpy ans scipy for data handling and signal processing.
 
