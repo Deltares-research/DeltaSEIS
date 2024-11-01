@@ -16,7 +16,7 @@ winget install prefix-dev.pixi
 ```
 Now clone deltaseis to your local drive using:
 ```
-git clone https://gitlab.com/deltares/tgg-projects/subsurface-toolbox/deltaseis.git
+git clone https://github.com/Deltares-research/deltaseis.git
 ```
 Then navigate into that folder with:
 ```
