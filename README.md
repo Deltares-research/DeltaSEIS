@@ -5,7 +5,7 @@
 
 The Deltares Seismic (DeltaSEIS) package is designed to handle all common formats of seismic data. This includes conventional seismic data, DAS fiber optic and simulated data. It provides selection, editing, processing, analysis, and export methods that can be applied generically to the loaded data. It is designed to connect with other Deltares developments such as [iMod](https://gitlab.com/deltares/imod) and [DataFusionTools](https://bitbucket.org/DeltaresGEO/datafusiontools/src/master/).
 
-Both the **Seismic** and **Segy_editor** classes make heavey use of the [segyio](https://segyio.readthedocs.io/en/latest/index.html) and [obspy](https://docs.obspy.org/) packages as well as numpy as scipy for data handling and signal processing.
+Both the **Seismic** and **Segy_editor** classes totally rely on the use of the [segyio](https://segyio.readthedocs.io/en/latest/index.html) and [obspy](https://docs.obspy.org/) packages as well as numpy as scipy for data handling and signal processing.
 
 ## Installation process
 The installation uses package manager pixi, for installation options see https://pixi.sh/latest/
