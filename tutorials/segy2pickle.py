@@ -25,10 +25,10 @@ def export_pickle(infile):
     s = Segy_edit(infile)
     print(np.array(s.trace_data).shape)
 
-    seismic = Seismic(s.trace_data, s.sampling_rate, s.spi.mean())
+    seismic = Seismic(s.trace_data, s.sampling_rate, s.shot_point_interval.mean())
     print(s.sampling_rate)
-    print(s.spi)
-    print(s.spi.mean())
+    print(s.shot_point_interval)
+    print(s.shot_point_interval.mean())
 
     with open(outfile, 'wb') as f:
         np.save(f, np.array(seismic.data))

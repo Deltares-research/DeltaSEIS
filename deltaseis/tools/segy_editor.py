@@ -60,10 +60,10 @@ class Segy_edit:
         self.trace_data = [tr.astype(np.dtype(self.data_sample_format)) for tr in self.src.trace]
 
         # relevant trace header attribute scalars
-        self.trace_number = len(self.src.trace)
+        self.trace_number = self.spec.tracecount
         self.trace_samples = len(self.spec.samples)
-        self.indices = np.arange(self.trace_number)
         self.sampling_interval = self.src.bin[3217]
+        self.gain_type = self.src.bin[3253]
         self.sampling_rate = 1 / (self.sampling_interval * 1e-6)
         self.record_length = self.trace_samples * 1e-3 * self.sampling_interval
         
@@ -78,6 +78,7 @@ class Segy_edit:
         self.number_of_channels = len(np.unique(self.src.attributes(13)[:]))
 
         #relevant trace header attribute lists
+        self.indices = np.arange(self.trace_number)
         self.trace_sequence = self.src.attributes(1)[:]
         self.ffid = self.src.attributes(9)[:]
         self.channel_numbers = self.src.attributes(13)[:]
@@ -85,15 +86,16 @@ class Segy_edit:
         self.cdps = self.src.attributes(21)[:]
         self.fold = self.src.attributes(33)[:]
         self.offsets = self.src.attributes(37)[:]
-        self.rz = self.src.attributes(41)[:]
+        self.groupz = self.src.attributes(41)[:]
         self.z = self.src.attributes(45)[:]
         self.x = self.src.attributes(73)[:]
         self.y = self.src.attributes(77)[:]
         self.groupx = self.src.attributes(81)[:]
         self.groupy = self.src.attributes(85)[:]
+        self.recording_delay = self.src.attributes(109)[:]
         self.cdpx = self.src.attributes(181)[:]
         self.cdpy = self.src.attributes(185)[:]
-        self.spi = np.sqrt(np.diff(self.x)**2 + np.diff(self.y)**2)
+        self.shot_point_interval = np.sqrt(np.diff(self.x)**2 + np.diff(self.y)**2)
         
         #horizons
         self.horizons = {}
@@ -277,7 +279,7 @@ class Segy_edit:
 
         return x,y
     
-    def add_coordinates(self, x, y, groupx, groupy, z=None, rz=None):
+    def add_coordinates(self, x, y, groupx, groupy, z=None, groupz=None):
         """
         Adds coordinates to the SEGY file after validating necessary parameters.
         Parameters:
@@ -286,7 +288,7 @@ class Segy_edit:
         z (array-like): Z coordinates.
         groupx (array-like): Receiver X coordinates.
         groupy (array-like): Receiver Y coordinates.
-        rz (array-like): Receiver Z coordinates.
+        groupz (array-like): Receiver Z coordinates.
         Raises:
         ValueError: If scalar, vertical scalar, CRS, or vertical CRS are not defined.
         Notes:
@@ -323,8 +325,8 @@ class Segy_edit:
         if z is not None:
             self.z = (z / self.factor_vertical).astype(np.int32)
 
-        if rz is not None:
-            self.rz = (rz / self.factor_vertical).astype(np.int32)
+        if groupz is not None:
+            self.groupz = (groupz / self.factor_vertical).astype(np.int32)
        
         
 
@@ -828,6 +830,8 @@ class Segy_edit:
                 )[-shift_samples[i] :]
 
         self.trace_data = trace_data.tolist()
+        self.recording_delay = self.recording_delay + shifts
+    
 
     def plot(
         self,
@@ -949,27 +953,6 @@ class Segy_edit:
         plt.grid()
         plt.axis('equal')
 
-    def select_traces(self, trace_numbers):
-        """
-        Selects traces from the seismic data based on a list of trace numbers
-
-        Parameters
-        ----------
-        trace_numbers : list
-            List of trace numbers to select
-        """
-
-        self.trace_data = [self.trace_data[i] for i in trace_numbers]
-        self.trace_number = len(self.trace_data)
-        self.spec.tracecount = len(self.trace_data)
-
-        self.shotpoint_numbers = self.shotpoint_numbers[trace_numbers]
-        self.groupx = self.groupx[trace_numbers]
-        self.groupy = self.groupy[trace_numbers]
-        self.x = self.x[trace_numbers]
-        self.y = self.y[trace_numbers]
-        self.renumber_shotpoints()
-
     def select_traces(self, selection_indices):
         """
         Selects traces from the seismic data based on a list of trace numbers. The selection is applied upon writing.
@@ -998,6 +981,7 @@ class Segy_edit:
             dst.bin[3213] = self.trace_number_in_field_record
             dst.bin[3217] = self.sampling_interval
             dst.bin[3227] = self.nominal_fold
+            dst.bin[3253] = self.gain_type
 
             for i, index in enumerate(self.indices):
                 
@@ -1011,7 +995,7 @@ class Segy_edit:
                 dst.header[i][21] = self.cdps[index]
                 dst.header[i][33] = self.fold[index]
                 dst.header[i][37] = self.offsets[index]
-                dst.header[i][41] = self.rz[index]
+                dst.header[i][41] = self.groupz[index]
                 dst.header[i][45] = self.z[index]
                 dst.header[i][69] = self.scalar_vertical
                 dst.header[i][71] = self.scalar
@@ -1019,6 +1003,7 @@ class Segy_edit:
                 dst.header[i][77] = self.y[index]
                 dst.header[i][81] = self.groupx[index]
                 dst.header[i][85] = self.groupy[index]
+                dst.header[i][109] = self.recording_delay[index]
                 dst.header[i][181] = self.cdpx[index]
                 dst.header[i][185] = self.cdpy[index]
 

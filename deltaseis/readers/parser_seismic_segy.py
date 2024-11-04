@@ -42,7 +42,7 @@ def parse_segy(segy_filepath):
           
     except NameError:
         segy_filepath_out = segy_filepath.with_stem(segy_filepath.stem + "_TEMPORARY")
-        
+                
         with open(segy_filepath, 'rb') as file_in:
             with open(segy_filepath_out, 'wb') as file_out:
                 data = file_in.read()

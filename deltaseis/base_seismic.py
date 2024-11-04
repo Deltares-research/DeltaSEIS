@@ -168,7 +168,7 @@ class Seismic:
                 filtered_signal = lowpass_filter(signal,lowcut,highcut,forder,fs)
         """
         
-        win = signal.tukey(len(self.data[:,0]),0.1)
+        win = signal.windows.tukey(len(self.data[:,0]),0.1)
         nyq = 0.5 * self.fs
         low = lowcut/nyq
         high = highcut/nyq
