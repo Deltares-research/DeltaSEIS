@@ -230,7 +230,28 @@ class Seismic:
         
         return self.data_fk, self.f, self.kx
     
-    
+    def trace_averaging(self,n=1):
+        '''
+        Calculates a moving average over 2 x n +1 trace, so n traces on both sides
+        of each trace. At the start trace(s) the end trace(s) are added, idem for 
+        end trace(s) which include start trace(s). 
+        
+        Parameters
+        ----------
+        n : int, optional
+            Number of 'neighboring' trace to use in averaging
+
+        Returns
+        -------
+        data : 2D Array of floats
+            2D trace-averaged data
+        '''
+        cumamp = np.zeros(self.data.shape)
+        for i in range(-n,n+1):
+            cumamp = cumamp + np.roll(self.data,i,axis=1)
+        data = cumamp / (2*n+1)
+        return data
+
     
     def plot_fk(self, clip=1, kwin=0, fwin=0, pad_t=2, pad_x=2, outfile=None):  #NEEDS PROPER QC
         '''
