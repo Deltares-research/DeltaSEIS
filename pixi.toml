@@ -26,6 +26,8 @@ ipykernel = ">=6.29.3,<6.30"
 jupyter = ">=1.0.0,<1.1"
 geopandas = ">=0.14.3,<0.15"
 pip = ">=24.0,<25"
+h5netcdf = ">=1.4.0,<2"
+netcdf4 = ">=1.7.1,<2"
 
 [pypi-dependencies]
 segyio = "*"

@@ -10,11 +10,9 @@ Currently contains:
 - plot histogram
 - plot_psd
 
-
 UNDER CONSTRUCTION:
 - plot_time_psd_fk OR can we cast results from other plot funcitons in a pyplot 3 axs??
 ---- return plots as im? or fig?
-
 
 to be added:
 - cut record length
@@ -39,24 +37,21 @@ from matplotlib import colors
 import numpy as np
 from scipy import signal
 from scipy.fft import fft2, fftshift
+from scipy.ndimage import uniform_filter1d
 import sys
-        
-
+          
 class Seismic:
     '''Tools for basic processing and visualization of seismic data.'''
       
     def __init__(self, data, fs, dx):
-        
-        import numpy as np
-        
+             
         self.data = data
         self.fs = fs
         self.dx = dx
         self.byte_format = str(data.dtype)
         self.time_vector = np.linspace(0, self.data.shape[0]/self.fs, self.data.shape[0])
     
-
-    def agc_gain(self, data=None, agc_gate=0.25, method='rms'):
+    def agc_gain(self, data=None, agc_gate=0.25, method='rms', inplace=True):
         '''
         Applying AGC gain to seismic data. Fast way to find trends in the F-K domain
         However, it is not the same as true amplitude correction, so the input gives 
@@ -80,9 +75,6 @@ class Seismic:
     
         '''
         
-        import numpy as np
-        from scipy import signal
-        
         if data is None:
             self.data64 = self.data.astype(np.float64)    
         else:
@@ -97,62 +89,192 @@ class Seismic:
         
         data_agc = np.zeros((np.shape(self.data64)))
         
-        for i in range(traces):
-            
-            trace = self.data64[:,i]
-            trace_squared = pow(trace,2)
-            rms = np.sqrt(np.convolve(trace_squared, triangle, mode='same'))
-            epsi = 1.e-10*max(rms)
-            op = rms/(pow(rms,2) + epsi)
-            data_agc[:,i] = self.data64[:,i]*op
+        trace_squared = np.power(self.data64, 2)
+        rms = np.sqrt(signal.convolve2d(trace_squared, triangle[:, np.newaxis], mode='same'))
+        epsi = 1.e-10 * np.max(rms, axis=0)
+        op = rms / (np.power(rms, 2) + epsi)
+        data_agc = self.data64 * op
         
-        if method=='amplitude':                # Normalize by amplitude
+        if method=='amplitude':            # Normalize by amplitude
         
-            for j in range(traces):
-                trace =  data_agc[:,j]
-                max_amplitude = np.max(np.abs(trace))
-                data_agc[:,j] = data_agc[:,j]/max_amplitude
+            max_amplitude = np.max(np.abs(data_agc), axis=0)
+            data_agc /= max_amplitude
         
         elif method=='rms':                # Normalize by rms
             
-            for k in range(traces):
-                trace =  data_agc[:,k]
-                rms_amplitude =  np.sqrt(np.sum(pow(trace,2))/samples)
-                data_agc[:,k] = data_agc[:,k]/rms_amplitude
+            rms_amplitude = np.sqrt(np.sum(data_agc**2, axis=0) / samples)
+            data_agc /= rms_amplitude
         
         else:
-            
             print("please specify method as 'rms'(default) or 'amplitude'")
             
-        self.data_agc = data_agc
+        if inplace==True:
+            self.data = data_agc
+        else:
+            return data_agc 
     
-        return self.data_agc 
+    def time_power_gain(self, power=2, inplace=True, data=None):
+        """
+        Apply time power (T^power) gain to the seismic data.
+        This method applies a time power gain to the seismic data, which can enhance
+        the visibility of deeper reflections in the data.
+        inplace : bool, optional
+            If True, modify the instance's data in place. If False, return a new array
+            with the time power gain applied. Default is True.
+        data : 2D array, optional
+            Timeseries of seismic data. If not provided, the instance's data attribute
+            will be used. Default is None.
+            Seismic data with time power gain applied. Only returned if inplace is False.
+        Notes
+        -----
+        The time power gain is applied by multiplying each data point by the square of
+        its corresponding time value.
+        """
     
-    def time_squared_gain(self, data=None):
+        if data is None:
+            data = self.data
+
+        data_t2_gain = (self.time_vector[:, np.newaxis] ** power) * data
+
+        if inplace==True:
+            self.data = data_t2_gain
+        else:       
+            return data_t2_gain
         
-        '''Applied time squared (T^2) gain to the data.
+    def spherical_divergence_gain(self, rms_velocity, inplace=True, data=None):
+        '''
+        This correction compensates for loss of amplitudes due to
+        spherical wavefront spreading.
+
+        Parameters
+        ----------
+        rms_velocity : float or 1D array
+            RMS velocity. If a scalar is provided, it is assumed constant for all times.
+            If a vector is provided, it should have the same length as the number of samples.
+        inplace : bool, optional
+            If True, modify the instance's data in place. If False, return a new array
+            with the spherical divergence gain applied. Default is True.
+        data : 2D array, optional
+            Timeseries of seismic data. If not provided, the instance's data attribute
+            will be used. Default is None.
+
+        Returns
+        -------
+        data_spherical_divergence_gain : 2D array
+            Seismic data with spherical divergence gain applied. Only returned if inplace is False.
+        '''
+        if data is None:
+            data = self.data
+
+        if np.isscalar(rms_velocity):
+            rms_velocity = np.full(len(self.time_vector), rms_velocity)
+
+        data_spherical_divergence_gain = (self.time_vector[:, np.newaxis] * rms_velocity[:, np.newaxis]) * data
+
+        if inplace:
+            self.data = data_spherical_divergence_gain
+        else:
+            return data_spherical_divergence_gain
+
+    def cylindrical_divergence_gain(self, rms_velocity, inplace=True, data=None):
+        '''
+        This correction compensates for loss of amplitudes due to
+        cylindrical wavefront spreading.
+
+        Parameters
+        ----------
+        rms_velocity : float or 1D array
+            RMS velocity. If a scalar is provided, it is assumed constant for all times.
+            If a vector is provided, it should have the same length as the number of samples.
+        inplace : bool, optional
+            If True, modify the instance's data in place. If False, return a new array
+            with the spherical divergence gain applied. Default is True.
+        data : 2D array, optional
+            Timeseries of seismic data. If not provided, the instance's data attribute
+            will be used. Default is None.
+
+        Returns
+        -------
+        data_cylindrical_divergence_gain : 2D array
+            Seismic data with spherical divergence gain applied. Only returned if inplace is False.
+        '''
+        if data is None:
+            data = self.data
+
+        if np.isscalar(rms_velocity):
+            rms_velocity = np.full(len(self.time_vector), rms_velocity)
+
+        data_cylindrical_divergence_gain = (self.time_vector[:, np.newaxis] * rms_velocity[:, np.newaxis]) * data
+
+        if inplace:
+            self.data = data_cylindrical_divergence_gain
+        else:
+            return data_cylindrical_divergence_gain
+        
+    def anelastic_attenuation_gain(self, anelestic_attenuation_factor, rms_velocity, inplace=True, data=None):
+        '''
+        This correction compensates for loss of amplitudes due to anelastic attenuation. This is due
+        to fluid movement in th pores of rock (sloshing) and grain boundary friction (jostling).
+        Sloshing has a stronger effect on attenuation than jostling.
+
+        Parameters
+        ----------
+        rms_velocity : float or 1D array
+            RMS velocity. If a scalar is provided, it is assumed constant for all times.
+            If a vector is provided, it should have the same length as the number of samples.
+        inplace : bool, optional
+            If True, modify the instance's data in place. If False, return a new array
+            with the spherical divergence gain applied. Default is True.
+        data : 2D array, optional
+            Timeseries of seismic data. If not provided, the instance's data attribute
+            will be used. Default is None.
+
+        Returns
+        -------
+        data_anelastic_attenuation_gain : 2D array
+            Seismic data with spherical divergence gain applied. Only returned if inplace is False.
+        '''
+        if data is None:
+            data = self.data
+
+        print(f"An anelastic attenuation factor of {anelestic_attenuation_factor} corresponds to a Q value of {1 / anelestic_attenuation_factor}")
+        self.anelestic_attenuation_factor = anelestic_attenuation_factor
+        self.q = 1 / anelestic_attenuation_factor
+
+        if np.isscalar(rms_velocity):
+            rms_velocity = np.full(len(self.time_vector), rms_velocity)
+
+        data_anelastic_attenuation_gain = np.exp(-anelestic_attenuation_factor * self.time_vector[:, np.newaxis] * rms_velocity[:, np.newaxis]) * data
+
+        if inplace:
+            self.data = data_anelastic_attenuation_gain
+        else:
+            return data_anelastic_attenuation_gain
+    
+    def trace_averaging(self, number_of_traces=1, inplace=True):
+        '''
+        Calculates a moving average over 2 x n +1 trace, so n traces on both sides
+        of each trace. At the start trace(s) the end trace(s) are added, idem for 
+        end trace(s) which include start trace(s). 
         
         Parameters
         ----------
-        data: 2d array, optional
-            timeseries of seismic data, default=None
-            if not defined uses the data variable of the instance
-    
+        number_of_traces : int, optional
+            Number of 'neighboring' traces on both sides to use in averaging
+
         Returns
         -------
-        data_time_squared : 2D array of floats
-            seismic data that has time squared gain applied. 
-    
+        data : 2D Array of floats
+            2D trace-averaged data
         '''
+        data = uniform_filter1d(self.data, size=2 * number_of_traces + 1, axis=1, mode='wrap')
         
-        if data is None:
-            data = self.data
-       
-        self.data_t2_gain = self.time_vector[:, np.newaxis] * data
+        if inplace==True:
+            self.data = data
+        else:
+            return data
         
-        return self.data_t2_gain
-    
-    def bandpass_filter(self, lowcut, highcut, forder=3):
+    def bandpass_filter(self, lowcut, highcut, forder=3, inplace=True):
         
         """
             Applies a bandpass filter to the inputted signal, leaving only the signal's frequency content between the highcut and lowcut frequencies and filtering out everything outside that range. \n
@@ -174,17 +296,14 @@ class Seismic:
         high = highcut/nyq
         
         b,a = signal.butter(forder, [low,high], btype='bandpass')
-              
-        data_bandpass = np.empty([self.data.shape[0],1])
-        #bandpass filter per trace
-        for i in range(self.data.shape[1]):
-            
-            trace_bandpass = signal.filtfilt(b,a,self.data[:,i].transpose()*win)
-            data_bandpass = np.c_[data_bandpass, trace_bandpass]
-            
-        self.data_bandpass = data_bandpass[:, 1:]
         
-        return(self.data_bandpass)
+        # Apply the bandpass filter to all traces at once
+        data_bandpass = signal.filtfilt(b, a, self.data * win[:, np.newaxis], axis=0)
+
+        if inplace==True:
+            self.data_bandpass = data_bandpass[:, 1:]
+        else:
+            return data_bandpass[:, 1:]    
 
 
     def fk_spectrum(self, pad_t=2, pad_x=2):
@@ -227,30 +346,6 @@ class Seismic:
         self.data_fk = data_fk
         self.f = f
         self.kx = kx
-        
-        return self.data_fk, self.f, self.kx
-    
-    def trace_averaging(self,n=1):
-        '''
-        Calculates a moving average over 2 x n +1 trace, so n traces on both sides
-        of each trace. At the start trace(s) the end trace(s) are added, idem for 
-        end trace(s) which include start trace(s). 
-        
-        Parameters
-        ----------
-        n : int, optional
-            Number of 'neighboring' trace to use in averaging
-
-        Returns
-        -------
-        data : 2D Array of floats
-            2D trace-averaged data
-        '''
-        cumamp = np.zeros(self.data.shape)
-        for i in range(-n,n+1):
-            cumamp = cumamp + np.roll(self.data,i,axis=1)
-        data = cumamp / (2*n+1)
-        return data
 
     
     def plot_fk(self, clip=1, kwin=0, fwin=0, pad_t=2, pad_x=2, outfile=None):  #NEEDS PROPER QC
