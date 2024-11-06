@@ -193,6 +193,7 @@ class Segy_edit:
         Set the endianness for the output file to 'big' or 'little'
         """
         self.spec.endian = endian
+        print(f"Endianness set to {endian}")
 
     
     def set_crs(self,epsg):
@@ -214,6 +215,7 @@ class Segy_edit:
         """
 
         self.crs = CRS.from_epsg(epsg)
+        print(f"CRS set to {self.crs}")
 
     def set_crs_vertical(self,epsg_vertical):
         """
@@ -616,7 +618,7 @@ class Segy_edit:
 
         setattr(self, horizon_name, horizon_two_way_times)
 
-        self.add_to_horizons(horizon_name)
+        self.__add_to_horizons__(horizon_name)
 
     def get_seabed_pick(
         self,
@@ -691,7 +693,7 @@ class Segy_edit:
         else:
             self.seabed_pick = seabed_pick
 
-        self.add_to_horizons("seabed_pick")
+        self.__add_to_horizons__("seabed_pick")
 
     def truncate_non_nan_signal(self, horizon, truncate_samples=0):
         """truncate the non-nan part of a vector and set to nan to avoid edge effects
@@ -738,7 +740,7 @@ class Segy_edit:
                 f"{horizon1_name} and/or {horizon2_name} does not exist, {difference_horizon_name} not calculated"
             )
 
-        self.add_to_horizons(difference_horizon_name)
+        self.__add_to_horizons__(difference_horizon_name)
 
     def handle_nans(self, horizon):
         """Interpolate nans values in a horizon, the prepare it for filtering, set nan at the start
@@ -782,10 +784,17 @@ class Segy_edit:
         savgol_horizon = savgol_filter(horizon, window_length, polyorder, mode="mirror")
 
         setattr(self, savgol_horizon_name, savgol_horizon)
-        self.add_to_horizons(savgol_horizon_name)
+        self.__add_to_horizons__(savgol_horizon_name)
+
+    def add_horizon(self, horizon_name, horizon):
+        """Add a horizon to the object, this can be used to add a horizon that is not
+        calculated from the seismic data, but is imported from another source"""
+
+        setattr(self, horizon_name, horizon)
+        self.__add_to_horizons__(horizon_name)
 
 
-    def add_to_horizons(self, horizon_name):
+    def __add_to_horizons__(self, horizon_name):
         """Checks if horizon exists and gives a warning when that it overwrites. If it
         does not exist, it is added to the horizons dictionary"""
 
@@ -813,21 +822,25 @@ class Segy_edit:
         shifts = np.copy(corrections)
         shifts[np.isnan(shifts)] = 0
 
-        shift_samples = np.array(shifts / (1e-3 * self.sampling_interval)).astype(
-            int
-        )  # in millisecond
+        shift_samples = np.array(shifts / (1e-3 * self.sampling_interval)).astype(int)
 
         trace_data = np.array(self.trace_data, dtype=self.data_sample_format)
 
-        for i, tr in enumerate(trace_data):
-            if shift_samples[i] > 0:
-                trace_data[i] = np.pad(
-                    trace_data[i], (shift_samples[i], 0), "constant"
-                )[: -shift_samples[i]]
-            elif shift_samples[i] < 0:
-                trace_data[i] = np.pad(
-                    trace_data[i], (0, abs(shift_samples[i])), "constant"
-                )[-shift_samples[i] :]
+        # Create an array to hold the shifted traces
+        shifted_trace_data = np.zeros_like(trace_data)
+
+        for i, shift in enumerate(shift_samples):
+            if shift >= 0:
+                if shift > 0:
+                    shifted_trace_data[i, shift:] = trace_data[i, :-shift]
+                elif shift < 0:
+                    shifted_trace_data[i, :shift] = trace_data[i, -shift:]
+                else:
+                    shifted_trace_data[i, :] = trace_data[i, :]
+            else:
+                shifted_trace_data[i, :shift] = trace_data[i, -shift:]
+
+        trace_data = shifted_trace_data
 
         self.trace_data = trace_data.tolist()
         self.recording_delay = self.recording_delay + shifts
@@ -864,7 +877,7 @@ class Segy_edit:
         if vmin<0: #if data is full wave form
             vmin = -clip * np.mean(np.abs(self.trace_data))
             vmax = clip * np.mean(np.abs(self.trace_data))
-            cmap = 'bwr'
+            cmap = cmap
         im = plt.imshow(
             np.array(self.trace_data).T,
             cmap=cmap,
@@ -964,13 +977,34 @@ class Segy_edit:
         """
         self.indices = selection_indices
         self.spec.tracecount = len(self.indices)
+
+    def set_data_sample_format_code(self):
+        """
+        Set the data sample format code based on the data sample format to be added in the binairy header of the segy file
+        """
+        if self.data_sample_format == "int16":
+            self.data_sample_format_code = 3
+        elif self.data_sample_format == "int32":
+            self.data_sample_format_code = 3
+        elif self.data_sample_format == "float32":
+            self.data_sample_format_code = 5
+        elif self.data_sample_format == "float64":
+            self.data_sample_format_code = 6
+        else:
+            raise ValueError(
+                "Data sample format not recognized, please use one of the following: int16, int32, float32, float64"
+            )
         
+        self.spec.format = self.data_sample_format_code
+       
 
     def write(self, segy_outpath):
         # cast trace data to correct format
         self.trace_data = np.array(self.trace_data).astype(
             np.dtype(self.data_sample_format)
         )
+        
+        self.set_data_sample_format_code()
 
         with segyio.create(segy_outpath, self.spec) as dst:
             dst.text[0] = self.text_header
@@ -982,6 +1016,7 @@ class Segy_edit:
             dst.bin[3217] = self.sampling_interval
             dst.bin[3227] = self.nominal_fold
             dst.bin[3253] = self.gain_type
+            dst.bin[3225] = self.data_sample_format_code
 
             for i, index in enumerate(self.indices):
                 
@@ -1003,7 +1038,7 @@ class Segy_edit:
                 dst.header[i][77] = self.y[index]
                 dst.header[i][81] = self.groupx[index]
                 dst.header[i][85] = self.groupy[index]
-                dst.header[i][109] = self.recording_delay[index]
+                dst.header[i][109] = self.recording_delay[index].astype(np.int32)
                 dst.header[i][181] = self.cdpx[index]
                 dst.header[i][185] = self.cdpy[index]
 
@@ -1013,6 +1048,8 @@ class Segy_edit:
                     self.segy_filepath.unlink()
             else:
                 self.src.close()
+
+            print(f"SEG-Y file written in {self.data_sample_format} format to {segy_outpath}")
 
     def xstar_split(self, mode="envelope"):
         """

@@ -41,7 +41,7 @@ segy_files= tk.filedialog.askopenfilenames(filetypes = (("SEG-Y files","*.sgy;*.
 # segy_files=["D:/Projects/DIS/interpretations/zeeland2019/Seismiek_S2_S3_test/test/beton_2001_lijn01.sgy"]
 
 #%%
-outfile="bergen" #outfile basename for shapefiles
+outfile="PES_waal_survey2_area3" #outfile basename for shapefiles
 trackpoints=True #output track point shape file
 tracklines=True #output track line shape file
 point_type="Trace number" #e.g. shotpoint or CDP depending on which point_byte is used
@@ -67,8 +67,8 @@ scalar_corr=1 #multiplier if the coordinate scalar in the segy traceheader is in
 # ED50 UTM 31N: 23031
 # RD new: 28992
 
-epsg_in='32631'
-epsg_out='4326'
+epsg_in='28992'
+epsg_out='28992'
 
 vdatum='NAP'
 

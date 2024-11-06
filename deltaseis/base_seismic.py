@@ -20,7 +20,13 @@ to be added:
 - interactive line drawing for slopes
 - xarray?
 - fbpick for shot selection
-- add wiggle module
+- add wiggle module (using segpy)
+- add decon module (using thrid party)?
+- add migration module (using thrid party)?
+- add multiple suppression module (using thrid party)?
+- add AVO module (using thrid party)?
+- add inversion module (using thrid party)?
+- add QC module (using thrid party)?
 - add kwargs??
 - t2 gain
 
@@ -28,6 +34,7 @@ to be added:
 - stack
 
 Readers: TDMS, sg2, dat, segy, seg, segd have to be made in separately
+Adding tests becomes more important
 
 @author: Roeland Nieboer @ Deltares
 """
@@ -50,8 +57,58 @@ class Seismic:
         self.dx = dx
         self.byte_format = str(data.dtype)
         self.time_vector = np.linspace(0, self.data.shape[0]/self.fs, self.data.shape[0])
+
+    def convert_to_trace_data(self, data_sample_format=None, inplace=True):
+        """
+        Convert 2D array to a list of trace arrays to be written in SEGY format.
+        This method converts the internal 2D data array into a list of trace arrays,
+        which can then be written in SEGY format. The data sampling format can be 
+        specified to ensure that no narrowing of the data occurs when writing to SEGY.
+        Parameters:
+        -----------
+        data_sample_format : str, optional
+            The desired data sample format. Supported formats are 'int16', 'int32', 
+            'float32', and 'float64'. If None, the data will not be converted.
+        inplace : bool, optional
+            If True, the converted data will replace the original data in the object.
+            If False, the converted data will be returned. Default is True.
+        Returns:
+        --------
+        list of numpy.ndarray or None
+            If inplace is False, returns a list of trace arrays. If inplace is True, 
+            the method returns None and updates the object's data attribute.
+        Raises:
+        -------
+        ValueError
+            If an unsupported data_sample_format is provided.
+        """
+
+        if data_sample_format is not None:
+            formats = {
+                'int16': np.int16,
+                'int32': np.int32,
+                'float32': np.float32,
+                'float64': np.float64
+            }
+            if data_sample_format in formats:
+                if 'int' in data_sample_format:
+                    data = (self.data * np.iinfo(formats[data_sample_format]).max / np.max(np.abs(self.data))).astype(formats[data_sample_format])
+                else:
+                    data = self.data.astype(formats[data_sample_format])
+            else:
+                raise ValueError("Unsupported data_sample_format. Use 'int16', 'int32', 'float32', or 'float64'.")
+        else:
+            data = self.data
+
+        data = [np.array(data.T[trace]) for trace in range(data.shape[1])]
+
+        if inplace:
+            self.data = data
+        else:
+            return data
     
     def agc_gain(self, data=None, agc_gate=0.25, method='rms', inplace=True):
+        
         '''
         Applying AGC gain to seismic data. Fast way to find trends in the F-K domain
         However, it is not the same as true amplitude correction, so the input gives 
@@ -127,7 +184,7 @@ class Seismic:
             Seismic data with time power gain applied. Only returned if inplace is False.
         Notes
         -----
-        The time power gain is applied by multiplying each data point by the square of
+        The time power gain is applied by multiplying each data point by the power of
         its corresponding time value.
         """
     
