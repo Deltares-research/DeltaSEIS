@@ -1038,7 +1038,7 @@ class Segy_edit:
                 dst.header[i][77] = self.y[index]
                 dst.header[i][81] = self.groupx[index]
                 dst.header[i][85] = self.groupy[index]
-                dst.header[i][109] = self.recording_delay[index].astype(np.int32)
+                dst.header[i][109] = self.recording_delay[index].astype(int)
                 dst.header[i][181] = self.cdpx[index]
                 dst.header[i][185] = self.cdpy[index]
 

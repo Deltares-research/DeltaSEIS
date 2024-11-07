@@ -38,9 +38,8 @@ segy_files = [Path(r"D:\Projects\PES waal\segy\segy_full_renamed\S2\S2_20210623_
 crosspoints = Path(r"D:\Projects\PES waal\qgis\PES_waal_survey2_area3_Trackpoints_crossings.shp")                       
 crosspoints_gdf = gpd.read_file(crosspoints)
 trace_numbers = crosspoints_gdf['Trace numb'].values.astype(int)
-print(trace_numbers)
 
-#%% traces within  'diastance' meters from the crosspoints will be select and written to a new segy file
+# traces within  'distance' meters from the crosspoints will be select and written to a new segy file
 distance = 50
 
 for i, segy_file in enumerate(segy_files):
@@ -49,6 +48,14 @@ for i, segy_file in enumerate(segy_files):
     edit = Segy_edit(segy_file)
     edit.set_crs(28992)
 
+    # set the recording delay as the difference between the seismic datum and crs datum (NAP) in this case 2 m
+    edit.recording_delay = np.full(len(edit.recording_delay), 2)
+
+    # apply conversion to depth using a constant velocity of v=15000 m/s (1.5 m/ms) by updating the sampling interval
+    # this is for the export of depth converted seisnc data. Note that edit.sampling_interval is assumed in ms, not conventional microseconds.
+    velocity = 1500 # m/s
+    edit.sampling_interval = int(np.round(edit.sampling_interval * (0.5 * -velocity*1e-3), 0))   #the sampling interval is now in meters
+    print(f"Depth conversion applied using constant velocity = {velocity} m/s (depth sampling interval: {edit.sampling_interval} mm)")
 
     distance_along_line = np.cumsum(edit.shot_point_interval)
     distance_from_cross = edit.line_distance - edit.line_distance[trace_numbers[i]]
@@ -56,5 +63,5 @@ for i, segy_file in enumerate(segy_files):
 
     edit.select_traces(indices)
 
-    selection_file = segy_file.with_stem(f"{segy_file.stem}_SEL")
+    selection_file = segy_file.with_stem(f"{segy_file.stem}_DEPTH_SEL")
     edit.write(selection_file)

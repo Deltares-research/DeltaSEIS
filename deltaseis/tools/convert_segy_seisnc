@@ -6,7 +6,7 @@ from pathlib import Path
 import json
 import importlib.resources
 from pathlib import Path
-from . import config
+from deltaseis import config
 
 #notes: 
 '''
@@ -30,16 +30,19 @@ def convert_segy_to_seisnc(segy_file_path, config_path=None):
 
     # Load SEG-Y file with xarray
     ds = xr.open_dataset(
-        segy_file_path,
-        dim_byte_fields =   fields["dim_bytes"],
-        extra_byte_fields = fields["trace_header_bytes"]
-    )
+         segy_file_path,
+         dim_byte_fields = fields["dim_bytes"],
+         extra_byte_fields = fields["trace_header_bytes"],
+         segyio_kwargs = {'endian': 'little'}
+     )
     
+        
     # Scale coordinates with SEG-Y coordinate scalar
-    ds.segysak.scale_coords()
+    ds.segysak.scale_coords(-100)
     
     # Write to SeisNC format
-    output_file = Path(segy_file_path).with_suffix('.nc')
+    output_file = Path(segy_file_path).with_suffix('.seisnc')
+    
     ds.to_netcdf(output_file)
     print(f"Converted {segy_file_path} to {output_file}")
 
@@ -49,7 +52,7 @@ def main():
     root.withdraw()
     # Open file dialog to select multiple SEGY files
     segy_file_paths = filedialog.askopenfilenames(title="Select SEGY files", filetypes=[("SEGY files", "*.sgy *.segy")])
-        
+ 
     if segy_file_paths:
         # Use ThreadPoolExecutor to process files in parallel
         with ThreadPoolExecutor() as executor:

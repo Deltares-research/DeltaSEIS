@@ -1,9 +1,9 @@
 {
     "dim_bytes": {
-        "ffid": 9
+        "trace_number": 1
     },
     "trace_header_bytes": {
-        "trace_number": 1,
+        "ffid": 9,
         "channel_number": 13,
         "shotpoint_number": 17,
         "cdp_number": 21,
@@ -13,8 +13,9 @@
         "sensor_depth": 49,
         "source_x": 73,
         "source_y": 77,
+        "receiver_x": 81,
+        "receiver_y": 85,
         "coordinate_units": 89,
-        "recording_delay": 109,
         "year": 157,
         "julian_day": 159,
         "hour": 161,
@@ -23,8 +24,6 @@
         "time_code": 167,
         "trace_weighing_factor": 169,
         "cdp_x": 181,
-        "cdp_y": 185,
-        "inline_number": 189,
-        "crossline_number": 191
+        "cdp_y": 185
     }
 }
