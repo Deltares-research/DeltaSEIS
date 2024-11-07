@@ -41,7 +41,7 @@ segy_files= tk.filedialog.askopenfilenames(filetypes = (("SEG-Y files","*.sgy;*.
 # segy_files=["D:/Projects/DIS/interpretations/zeeland2019/Seismiek_S2_S3_test/test/beton_2001_lijn01.sgy"]
 
 #%%
-outfile="PES_waal_survey2_area3" #outfile basename for shapefiles
+outfile="PES_waal_survey2_area3_sn_smoothed" #outfile basename for shapefiles
 trackpoints=True #output track point shape file
 tracklines=True #output track line shape file
 point_type="Trace number" #e.g. shotpoint or CDP depending on which point_byte is used

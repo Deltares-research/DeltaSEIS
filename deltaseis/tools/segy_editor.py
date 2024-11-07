@@ -96,6 +96,7 @@ class Segy_edit:
         self.cdpx = self.src.attributes(181)[:]
         self.cdpy = self.src.attributes(185)[:]
         self.shot_point_interval = np.sqrt(np.diff(self.x)**2 + np.diff(self.y)**2)
+        self.line_distance = np.cumsum(self.shot_point_interval)
         
         #horizons
         self.horizons = {}
@@ -843,8 +844,7 @@ class Segy_edit:
         trace_data = shifted_trace_data
 
         self.trace_data = trace_data.tolist()
-        self.recording_delay = self.recording_delay + shifts
-    
+            
 
     def plot(
         self,

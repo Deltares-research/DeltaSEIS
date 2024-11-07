@@ -24,13 +24,15 @@ pyzmq = ">=25.1.2,<25.2"
 matplotlib = ">=3.8.3,<3.9"
 ipykernel = ">=6.29.3,<6.30"
 jupyter = ">=1.0.0,<1.1"
-geopandas = ">=0.14.3,<0.15"
 pip = ">=24.0,<25"
 h5netcdf = ">=1.4.0,<2"
 netcdf4 = ">=1.7.1,<2"
+geopandas = ">=1.0.1,<2"
+pyogrio = ">=0.7.2,<0.8"
 
 [pypi-dependencies]
 segyio = "*"
 geost = "*"
 segpy = "*"
 opencv-python = ">=4.10.0.84, <5"
+
