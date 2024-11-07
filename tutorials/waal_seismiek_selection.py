@@ -1,8 +1,26 @@
 '''
-- calculate distance
-- trace selection based on 4 crosspoints (set manually by plotting the cross section with the qgis exports of the tracks)
-- find closest point, calculate distance of all points from THAT specific point. Select traces based on distance < x e.g 50 on both sides
-- conversion of all the raw data to make a clean repo would be an excellent idea (raw and processed)
+"""
+This script processes SEGY files to select seismic data traces that intersect with a user-defined cross section through the river Waal.
+The script performs the following steps:
+1. Reads SEGY files from specified paths.
+2. Loads crosspoints from a shapefile which contains the trace numbers of the crosspoints.
+3. For each SEGY file, calculates the distance of traces from the crosspoints.
+4. Selects traces within a specified distance from the crosspoints.
+5. Writes the selected traces to new SEGY files.
+Modules used:
+- deltaseis.Segy_edit: For editing SEGY files.
+- matplotlib.pyplot: For plotting (not used in this script but imported).
+- pathlib.Path: For handling file paths.
+- numpy: For numerical operations.
+- geopandas: For reading shapefiles.
+Variables:
+- segy_files: List of paths to SEGY files.
+- crosspoints: Path to the shapefile containing crosspoints.
+- crosspoints_gdf: GeoDataFrame containing the crosspoints data.
+- trace_numbers: Array of trace numbers from the crosspoints.
+- distance: Distance in meters within which traces will be selected.
+"""
+
 '''	
 #%%
 from deltaseis import Segy_edit

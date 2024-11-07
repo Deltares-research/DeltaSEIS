@@ -21,8 +21,7 @@ todo: remove outliers
 import segyio
 import numpy as np
 import pandas as pd
-from os import mkdir
-from os.path import dirname, isdir
+from pathlib import Path
 from shapely.geometry import Point, LineString
 import geopandas as gpd
 import time
@@ -41,7 +40,7 @@ segy_files= tk.filedialog.askopenfilenames(filetypes = (("SEG-Y files","*.sgy;*.
 # segy_files=["D:/Projects/DIS/interpretations/zeeland2019/Seismiek_S2_S3_test/test/beton_2001_lijn01.sgy"]
 
 #%%
-outfile="PES_waal_survey2_area3_sn_smoothed" #outfile basename for shapefiles
+outfile="PES_waal_survey2_area3_navfix" #outfile basename for shapefiles
 trackpoints=True #output track point shape file
 tracklines=True #output track line shape file
 point_type="Trace number" #e.g. shotpoint or CDP depending on which point_byte is used
@@ -79,7 +78,7 @@ vdatum='NAP'
 #end of user inputs
 #%%
 
-folder=dirname(segy_files[0])
+folder = Path(segy_files[0]).parent
 
 crs_in='epsg:{}'.format(epsg_in)
 crs_out='epsg:{}'.format(epsg_out)
@@ -164,10 +163,10 @@ print("Data extracted to dataframe in "+ str(t1) + " seconds")
 #%%
 #output point shapefile
 
-if isdir(folder+'/GIS'):
+if Path(folder / 'GIS').is_dir():
     print("Writing files to existing GIS folder...")
     
-else: mkdir(folder+'/GIS')
+Path(folder+'/GIS').mkdir(parents=True, exist_ok=True)
         
 geometry=[Point(xy) for xy in zip(df.Easting, df.Northing)]
 df = gpd.GeoDataFrame(df, crs=crs_in, geometry=geometry).reset_index(drop=True)

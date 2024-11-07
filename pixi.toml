@@ -35,4 +35,5 @@ segyio = "*"
 geost = "*"
 segpy = "*"
 opencv-python = ">=4.10.0.84, <5"
+segysak = ">=0.5.4, <0.6"
 

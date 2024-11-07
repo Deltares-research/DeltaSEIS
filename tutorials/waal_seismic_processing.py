@@ -1,3 +1,27 @@
+
+"""
+This script processes seismic data from the river Waal using the DeltaSEIS library.
+The script performs the following steps for each SEG-Y file:
+1. Reads the SEG-Y file and sets the coordinate reference system (CRS) and endian format.
+2. Applies vertical corrections to the trace data based on recording delays.
+3. Processes the trace data, including applying time power gain and trace averaging.
+4. Despikes the navigation data using smoothing and median filtering.
+5. Picks the seabed horizon and applies vertical corrections based on bathymetry data.
+6. Filters the seabed horizon and calculates corrections for differences due to changes in water level or sensor depth.
+7. Generates quality control (QC) plots and writes the processed data to a new SEG-Y file.
+Dependencies:
+- deltaseis
+- matplotlib
+- pathlib
+- numpy
+- xarray
+Inputs:
+- List of SEG-Y files to be processed.
+- Bathymetry raster file.
+Outputs:
+- Processed SEG-Y files with "_PRC" suffix.
+- QC plots saved as images.
+"""
 from deltaseis import Segy_edit, Seismic
 import matplotlib.pyplot as plt
 from pathlib import Path

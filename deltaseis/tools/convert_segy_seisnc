@@ -1,0 +1,30 @@
+import segysak
+import xarray as xr
+from tkinter import Tk, filedialog
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+
+def convert_segy_to_seisnc(segy_file):
+    # Load SEGY file
+    ds = segysak.segy.segy_loader(segy_file)
+    # Define output file name
+    output_file = Path(segy_file).with_suffix('.nc')
+    # Write to SeisNC format
+    ds.to_netcdf(output_file)
+    print(f"Converted {segy_file} to {output_file}")
+
+def main():
+    # Hide the root window
+    root = Tk()
+    root.withdraw()
+    # Open file dialog to select multiple SEGY files
+    segy_files = filedialog.askopenfilenames(title="Select SEGY files", filetypes=[("SEGY files", "*.sgy *.segy")])
+        
+    if segy_files:
+        # Use ThreadPoolExecutor to process files in parallel
+        with ThreadPoolExecutor() as executor:
+            executor.map(convert_segy_to_seisnc, segy_files)
+
+if __name__ == "__main__":
+    main()
