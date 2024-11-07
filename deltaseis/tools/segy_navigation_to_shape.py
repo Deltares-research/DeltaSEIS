@@ -14,6 +14,8 @@ after creation of the shapefiles, the prj should hold a text identical to the WK
 todo: put into GUI (make tab?)
 todo: remove outliers
 
+2024: this needs refactor - make simpler, add entrypoint where function is run (segy load parallely?, but in the end one shapefile) but also loadable as module 
+
 @author: r.nieboer
 """
 
