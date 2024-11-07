@@ -52,6 +52,3 @@ edit.vertical_trace_corrections(edit.difference_stage)
 edit.plot(save_plot=True, clip=0.9)
 processed_file = segy_file.with_stem(f"{segy_file.stem}_PRC")
 edit.write(processed_file)
-
-
-
