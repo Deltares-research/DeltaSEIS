@@ -64,7 +64,6 @@ for i, segy_file in enumerate(segy_files):
     edit.gain_type = 2 #t2 gain
 
     #despike navigation
-    edit.fix_navigation_smooth()
     edit.fix_navigation_median(maximum_dist=1, save_figures=True)
 
     print("Start seabed pick")
