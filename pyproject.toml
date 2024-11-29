@@ -1,46 +1,44 @@
 [build-system]
-requires = [
-    "setuptools>=64",
-    "wheel"
-]
+requires = ["setuptools>66", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "deltaseis"
-version = "0.1.0"
-authors = [
-    {name = "Roeland Nieboer", email = "roeland.nieboer@deltares.nl"}
-]
-description = "Subsurface data made easy"
+dynamic = ["version"]
+authors = [{name = "Roeland Nieboer", email = "roeland.nieboer@deltares.nl"}]
+description = "Doing cool stuff with seismic data"
 readme = "README.md"
 license = {file = "LICENSE"}
+keywords = [
+    "deltaseis",
+    "seisnc",
+    "seg-y",
+    "seismic",
+    "das",
+    "tdms",
+    "pre-stack",
+    "post-stack",
+    "geophysics",
+    "synthetic specfem",
+    "netcdf",
+    "subsurface toolbox",
+    "deltares"
+]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
-    "Intended Audience :: Science/Research/Consultans",
+    "Intended Audience :: Scienctists/Researchers/Consultants",
     "Topic :: Scientific/Engineering :: Geophysics",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
-	"Programming Language :: Python :: 3.11",
-	"Programming Language :: Python :: 3.12",
-    "Topic :: Scientific/Engineering",
+   	"Programming Language :: Python :: 3.12",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
-    "numpy",
-    "pyproj",
-    "pycrs",
-    "shapely",
-    "xarray",
-    "geopandas",
-    "xlrd",
-    "openpyxl",
-	"segyio",
-	"obspy",
-	"geost",
-    "pyvista >=0.36.1",
-    "shapely >=2.0.1 ",
+    "geost",
+    "segyio",
+    "segpy",
+    "segysak"
 ]
 
 [project.optional-dependencies]
@@ -82,3 +80,36 @@ unfixable = ["F401"]
 
 [tool.ruff.pydocstyle]
 convention = "numpy"
+
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
+
+[tool.pixi.dependencies]
+pip = "*"
+obspy = "*"
+scipy = "*"
+numpy = "*"
+pyproj = "*"
+pycrs = "*"
+shapely = "*"
+xarray = "*"
+dask = "*"
+matplotlib = "*"
+pyvista = "*"
+ipykernel = "*"
+jupyter = "*"
+h5netcdf = "*"
+netcdf4 = "*"
+geopandas = "*"
+pyogrio = "*"
+
+[tool.pixi.pypi-dependencies]
+deltaseis = { path = ".", editable = true }
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+dev = { features = ["dev"], solve-group = "default" }
+
+[tool.pixi.tasks]
+notebook = "jupyter notebook ./tutorials/segy_editing.ipynb"

@@ -31,10 +31,10 @@ import numpy as np
 
 from deltaseis import Segy_edit
 
-segy_files = [Path(r"D:\Projects\PES waal\segy\S2\S2_20210623_3_N_PRC.sgy"), 
-              Path(r"D:\Projects\PES waal\segy\S2\S2_20210623_3_ns_PRC.sgy"),
-              Path(r"D:\Projects\PES waal\segy\S2\S2_20210623_3_S_PRC.sgy"),
-              Path(r"D:\Projects\PES waal\segy\S2\S2_20210623_3_sn_PRC.sgy")]
+segy_files = [Path(r"D:\Projects\PES waal\segy\S2\processed\S2_20210623_3_N_PRC.sgy"), 
+              Path(r"D:\Projects\PES waal\segy\S2\processed\S2_20210623_3_ns_PRC.sgy"),
+              Path(r"D:\Projects\PES waal\segy\S2\processed\S2_20210623_3_S_PRC.sgy"),
+              Path(r"D:\Projects\PES waal\segy\S2\processed\S2_20210623_3_sn_PRC.sgy")]
 
 # get the crosspoints of the profile perpendicular to the segy trackes and the associated trace numbers
 crosspoints = Path(r"D:\Projects\PES waal\qgis\PES_waal_survey2_area3_Trackpoints_crossings.shp")
@@ -65,5 +65,5 @@ for i, segy_file in enumerate(segy_files):
 
     edit.select_traces(indices)
 
-    selection_file = segy_file.with_stem(f"{segy_file.stem}_DEPTH_SEL")
+    selection_file = segy_file.with_stem(f"{segy_file.stem}_DEPTH_SEL_new")
     edit.write(selection_file)
