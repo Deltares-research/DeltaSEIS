@@ -23,19 +23,21 @@ Variables:
 
 '''	
 #%%
-from deltaseis import Segy_edit
-import matplotlib.pyplot as plt
 from pathlib import Path
-import numpy as np
-import geopandas as gpd
 
-segy_files = [Path(r"D:\Projects\PES waal\segy\segy_full_renamed\S2\S2_20210623_3_N_PRC.sgy"), 
-              Path(r"D:\Projects\PES waal\segy\segy_full_renamed\S2\S2_20210623_3_ns_PRC.sgy"),
-              Path(r"D:\Projects\PES waal\segy\segy_full_renamed\S2\S2_20210623_3_S_PRC.sgy"),
-              Path(r"D:\Projects\PES waal\segy\segy_full_renamed\S2\S2_20210623_3_sn_PRC.sgy")]
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import numpy as np
+
+from deltaseis import Segy_edit
+
+segy_files = [Path(r"D:\Projects\PES waal\segy\S2\S2_20210623_3_N_PRC.sgy"), 
+              Path(r"D:\Projects\PES waal\segy\S2\S2_20210623_3_ns_PRC.sgy"),
+              Path(r"D:\Projects\PES waal\segy\S2\S2_20210623_3_S_PRC.sgy"),
+              Path(r"D:\Projects\PES waal\segy\S2\S2_20210623_3_sn_PRC.sgy")]
 
 # get the crosspoints of the profile perpendicular to the segy trackes and the associated trace numbers
-crosspoints = Path(r"D:\Projects\PES waal\qgis\PES_waal_survey2_area3_Trackpoints_crossings.shp")                       
+crosspoints = Path(r"D:\Projects\PES waal\qgis\PES_waal_survey2_area3_Trackpoints_crossings.shp")
 crosspoints_gdf = gpd.read_file(crosspoints)
 trace_numbers = crosspoints_gdf['Trace numb'].values.astype(int)
 

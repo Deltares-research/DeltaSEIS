@@ -22,11 +22,13 @@ Outputs:
 - Processed SEG-Y files with "_PRC" suffix.
 - QC plots saved as images.
 """
-from deltaseis import Segy_edit, Seismic
-import matplotlib.pyplot as plt
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+
+from deltaseis import Segy_edit, Seismic
 
 segy_files = [Path(r"D:\Projects\PES waal\segy\segy_full_renamed\S2\S2_20210623_3_N.sgy"), 
               Path(r"D:\Projects\PES waal\segy\segy_full_renamed\S2\S2_20210623_3_ns.sgy"),
@@ -48,7 +50,7 @@ for i, segy_file in enumerate(segy_files):
     shift = edit.recording_delay - manual_recording_delay
     edit.vertical_trace_corrections(shift)
     edit.recording_delay = np.full(len(edit.recording_delay), manual_recording_delay)
-                
+
     #trace data processing
     dx_mean = edit.factor*edit.shot_point_interval.mean()
     fs = edit.sampling_rate
@@ -69,7 +71,7 @@ for i, segy_file in enumerate(segy_files):
     print("Start seabed pick")
     ## import bathymetry and verical correction with seabed pick
     edit.get_seabed_pick(10, 100, 9, 3, truncate = 10)
-    
+
     print("Start Horizon processing")
     edit.filter_horizon_savgol('seabed_pick', 'seabed_pick_savgol', 51, 4)
     edit.add_horizon("seabed_multiple", 2*edit.seabed_pick_savgol + edit.recording_delay)

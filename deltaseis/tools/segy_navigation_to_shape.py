@@ -20,17 +20,19 @@ todo: remove outliers
 """
 
 #Import modules
-import segyio
+import time
+import tkinter as tk
+
+# import re
+import tkinter.filedialog
+import tkinter.simpledialog
+from pathlib import Path
+
+import geopandas as gpd
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from shapely.geometry import Point, LineString
-import geopandas as gpd
-import time
-# import re
-
-import tkinter.filedialog, tkinter.simpledialog
-import tkinter as tk
+import segyio
+from shapely.geometry import LineString, Point
 
 root = tk.Tk().withdraw()
 
@@ -42,13 +44,13 @@ segy_files= tk.filedialog.askopenfilenames(filetypes = (("SEG-Y files","*.sgy;*.
 # segy_files=["D:/Projects/DIS/interpretations/zeeland2019/Seismiek_S2_S3_test/test/beton_2001_lijn01.sgy"]
 
 #%%
-outfile="PES_waal_survey2_area3_navfix" #outfile basename for shapefiles
+outfile="maasg_seistec" #outfile basename for shapefiles
 trackpoints=True #output track point shape file
 tracklines=True #output track line shape file
 point_type="Trace number" #e.g. shotpoint or CDP depending on which point_byte is used
 point_byte=1 #check textual header. Generally: shotpoint=17, CDP=21
-easting_byte=73 #check textual header. Genearlly:  for m3ultichannel,CDP_X=181 (or 81) for SBP src_x=rec_x so source x=73 is mostly used 
-northing_byte=77 #check textual header. Gnerally: for multichannel, CDP=185 (or 85) for SBP src_y=rec_y so source y=77 is mostly used
+easting_byte=77 #check textual header. Genearlly:  for m3ultichannel,CDP_X=181 (or 81) for SBP src_x=rec_x so source x=73 is mostly used 
+northing_byte=73 #check textual header. Gnerally: for multichannel, CDP=185 (or 85) for SBP src_y=rec_y so source y=77 is mostly used
 scalar_byte=71
 pos_in_arcsec=False #true if postions are in arc seconds, for easting/northings use False
 replace_shotpoint=True #if non unique shotsource available in any of the bytes, this adds a number sequence from 1 to #tracecount
@@ -68,7 +70,7 @@ scalar_corr=1 #multiplier if the coordinate scalar in the segy traceheader is in
 # ED50 UTM 31N: 23031
 # RD new: 28992
 
-epsg_in='28992'
+epsg_in='32631'
 epsg_out='28992'
 
 vdatum='NAP'
@@ -167,36 +169,36 @@ print("Data extracted to dataframe in "+ str(t1) + " seconds")
 
 if Path(folder / 'GIS').is_dir():
     print("Writing files to existing GIS folder...")
-    
-Path(folder+'/GIS').mkdir(parents=True, exist_ok=True)
-        
+
+(folder / 'GIS').mkdir(parents=True, exist_ok=True)
+
 geometry=[Point(xy) for xy in zip(df.Easting, df.Northing)]
 df = gpd.GeoDataFrame(df, crs=crs_in, geometry=geometry).reset_index(drop=True)
 df=df.to_crs(crs_out)
 
-if trackpoints==True:
-    df.to_file(folder+'/GIS/'+outfile+'_Trackpoints.shp', driver='ESRI Shapefile')
+if trackpoints is True:
+    df.to_file(folder / 'GIS' / f'{outfile}_Trackpoints.shp', driver='ESRI Shapefile')
 
 t2=int(time.time()-t1-t0)
-    
-if trackpoints==True:
+
+if trackpoints is True:
     print("Trackpoint shapefile created in "+ str(t2) + " seconds")
 
 #%%
 #output line shapefile
-if tracklines==True:
-    dfL= df.groupby('Line name', as_index=False).agg({'geometry': lambda x: LineString(x.tolist())})
-    
-    dfL = gpd.GeoDataFrame(dfL, crs=crs_out, geometry='geometry')
+if tracklines is True:
+    dfl= df.groupby('Line name', as_index=False).agg({'geometry': lambda x: LineString(x.tolist())})
+
+    dfl = gpd.GeoDataFrame(dfl, crs=crs_out, geometry='geometry')
     try:
-        dfL['First {}'.format(point_type)]=first_sp
-        dfL['Last  {}'.format(point_type)]=last_sp
+        dfl['First {}'.format(point_type)]=first_sp
+        dfl['Last  {}'.format(point_type)]=last_sp
     except: print("First and last {} cannot be added to Trackline shapefile, possibly due to line name problems (check splitter)".format(point_type))
-    
+
     outfile_shape = '{}_Tracklines_{}.shp'.format(outfile, epsg_out)
-    dfL.to_file(folder+'/GIS/'+outfile_shape, driver='ESRI Shapefile')
-    
+    dfl.to_file(folder / 'GIS' / outfile_shape, driver='ESRI Shapefile')
+
     t3=int(time.time()-t2-t0)
-    
+
     print("Trackline shapefile created in "+ str(t3) + " seconds")
-            
+
