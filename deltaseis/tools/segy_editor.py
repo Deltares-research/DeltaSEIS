@@ -334,7 +334,7 @@ class Segy_edit:
         
 
     def transform_coordinates(
-        self, epsg_out, apply_new_coordinates=True
+        self, epsg_out, apply_new_coordinates=True, **kwargs
     ):
         """
         Transform the navigation coordinates from the segy file
@@ -358,9 +358,12 @@ class Segy_edit:
         x, y = self.xy_to_real()
         x_transformed, y_transformed = transformer.transform(x,y)
 
+        if 'scalar_out' in kwargs:
+            self.set_scalar(kwargs.get('scalar_out'))
+
         # write back into seg-y header required format
         if apply_new_coordinates == True:
-            
+
             with warnings.catch_warnings():
                 warnings.filterwarnings("error", category=RuntimeWarning)
 
