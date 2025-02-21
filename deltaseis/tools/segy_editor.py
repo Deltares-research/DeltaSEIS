@@ -274,8 +274,8 @@ class Segy_edit:
             raise ValueError("CRS is not defined, cannot perform function - first use set_crs() to define CRS")
 
         if self.crs.is_geographic:
-            x = self.factor * self.y / 3600
-            y = self.factor * self.x / 3600
+            x = self.factor * self.x / 3600
+            y = self.factor * self.y / 3600
         else:
             x = self.factor * self.x
             y = self.factor * self.y
@@ -1093,6 +1093,7 @@ class Segy_edit:
         self.trace_number_in_field_record = 1  # set number of traces to 1
         self.trace_number = int(self.trace_number / 3)
         self.spec.tracecount = int(self.spec.tracecount / 3)
+        self.indices = np.arange(self.trace_number)
 
     def full2envelope(self):
             """
