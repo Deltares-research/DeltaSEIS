@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 from matplotlib import pyplot as plt
 
-from deltaseis import Segy_edit
+
 
 
 def merge_segys(filelist, make_plot=True, record_length=None):
@@ -30,7 +30,7 @@ def merge_segys(filelist, make_plot=True, record_length=None):
         flag to plot coordinates of merged segy files using rainbow color, to allow quick visual check if order is correct (default=True)
 
     """
-    
+    from deltaseis import Segy_edit  # import here to avoid circular import
     # empty variables
     x = []
     y = []

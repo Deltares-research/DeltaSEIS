@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "deltaseis"
 dynamic = ["version"]
-authors = [{name = "Roeland Nieboer", email = "roeland.nieboer@deltares.nl"}]
+maintainers = [{name = "Roeland Nieboer", email = "roeland.nieboer@deltares.nl"}]
 description = "Doing cool stuff with seismic data"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -26,8 +26,10 @@ keywords = [
 ]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
-    "Intended Audience :: Scienctists/Researchers/Consultants",
-    "Topic :: Scientific/Engineering :: Geophysics",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Visualization",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
@@ -38,7 +40,8 @@ dependencies = [
     "geost",
     "segyio",
     "segpy",
-    "segysak"
+    "segysak",
+    "obspy"
 ]
 
 [project.optional-dependencies]
@@ -56,8 +59,11 @@ Homepage = "https://github.com/Deltares-research/DeltaSEIS"
 Repository = "https://github.com/Deltares-research/DeltaSEIS.git"
 Issues = "https://github.com/Deltares-research/DeltaSEIS/issues"
 
-[tool.setuptools]
-packages = ["deltaseis"]
+[tool.setuptools.packages.find]
+include = ["deltaseis", "deltaseis.*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "deltaseis.__version__"}
 
 [tool.pytest.ini_options]
 testpaths = [
@@ -87,7 +93,6 @@ platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
 
 [tool.pixi.dependencies]
 pip = "*"
-obspy = "*"
 scipy = "*"
 numpy = "*"
 pyproj = "*"
@@ -113,3 +118,4 @@ dev = { features = ["dev"], solve-group = "default" }
 
 [tool.pixi.tasks]
 notebook = "jupyter notebook ./tutorials/segy_editing.ipynb"
+

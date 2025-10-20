@@ -44,13 +44,13 @@ segy_files= tk.filedialog.askopenfilenames(filetypes = (("SEG-Y files","*.sgy;*.
 # segy_files=["D:/Projects/DIS/interpretations/zeeland2019/Seismiek_S2_S3_test/test/beton_2001_lijn01.sgy"]
 
 #%%
-outfile="maasg_seistec" #outfile basename for shapefiles
-trackpoints=True #output track point shape file
+outfile="HVS" #outfile basename for shapefiles
+trackpoints=False #output track point shape file
 tracklines=True #output track line shape file
 point_type="Trace number" #e.g. shotpoint or CDP depending on which point_byte is used
 point_byte=1 #check textual header. Generally: shotpoint=17, CDP=21
-easting_byte=77 #check textual header. Genearlly:  for m3ultichannel,CDP_X=181 (or 81) for SBP src_x=rec_x so source x=73 is mostly used 
-northing_byte=73 #check textual header. Gnerally: for multichannel, CDP=185 (or 85) for SBP src_y=rec_y so source y=77 is mostly used
+easting_byte=73 #check textual header. Genearlly:  for m3ultichannel,CDP_X=181 (or 81) for SBP src_x=rec_x so source x=73 is mostly used 
+northing_byte=77 #check textual header. Gnerally: for multichannel, CDP=185 (or 85) for SBP src_y=rec_y so source y=77 is mostly used
 scalar_byte=71
 pos_in_arcsec=False #true if postions are in arc seconds, for easting/northings use False
 replace_shotpoint=True #if non unique shotsource available in any of the bytes, this adds a number sequence from 1 to #tracecount
@@ -70,7 +70,7 @@ scalar_corr=1 #multiplier if the coordinate scalar in the segy traceheader is in
 # ED50 UTM 31N: 23031
 # RD new: 28992
 
-epsg_in='32631'
+epsg_in='28992'
 epsg_out='28992'
 
 vdatum='NAP'

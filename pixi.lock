@@ -6956,14 +6956,15 @@ packages:
   timestamp: 1615232388757
 - kind: pypi
   name: deltaseis
-  version: 0.0.0
+  version: 0.0.3
   path: .
-  sha256: 9b52b4fa97be22ebf507ea1c467520116a8afa39de8b417406b3a73d5d73974a
+  sha256: a07a0011d1b1d23efa180bcd5972add8b4a19089ce5e0b9ffce38fec7be86818
   requires_dist:
   - geost
   - segyio
   - segpy
   - segysak
+  - obspy
   - black ; extra == 'dev'
   - pytest ; extra == 'dev'
   - pytest-cov ; extra == 'dev'

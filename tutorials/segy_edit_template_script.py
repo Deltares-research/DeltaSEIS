@@ -1,7 +1,9 @@
 #%%
 from importlib import resources
 from pathlib import Path
+
 import numpy as np
+
 import deltaseis
 from deltaseis import Segy_edit
 

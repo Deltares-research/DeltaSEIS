@@ -1,11 +1,12 @@
-import segysak
-import xarray as xr
-from tkinter import Tk, filedialog
+import importlib.resources
+import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-import json
-import importlib.resources
-from pathlib import Path
+from tkinter import Tk, filedialog
+
+import segysak
+import xarray as xr
+
 from deltaseis import config
 
 #notes: 
