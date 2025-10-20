@@ -38,6 +38,7 @@ classifiers = [
 requires-python = ">=3.12"
 dependencies = [
     "geost",
+    "obspy",
     "segyio",
     "segpy",
     "segysak",
