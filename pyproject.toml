@@ -33,16 +33,14 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-   	"Programming Language :: Python :: 3.12",
+   	"Programming Language :: Python :: 3.13",
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
-    "geost",
-    "obspy",
     "segyio",
     "segpy",
-    "segysak",
-    "obspy"
+    "segysak", 
+    "geost>=0.3.0,<0.4",
 ]
 
 [project.optional-dependencies]
@@ -70,7 +68,7 @@ version = {attr = "deltaseis.__version__"}
 testpaths = [
     "tests",
 ]
-markers = [
+markers = [ 
 	"unittest: test of single component",
 	"integrationtest: test of multiple components",
 ]
@@ -80,7 +78,7 @@ line-length = 88
 
 [tool.ruff]
 line-length = 88
-target-version = "py310"
+target-version = "py312"
 select = ["F", "E", "W", "N", "I001"]
 ignore = ["F401"]
 unfixable = ["F401"]
@@ -90,25 +88,24 @@ convention = "numpy"
 
 [tool.pixi.project]
 channels = ["conda-forge"]
-platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
+platforms = ["win-64", "linux-64", "osx-64"]
 
 [tool.pixi.dependencies]
 pip = "*"
 scipy = "*"
 numpy = "*"
 pyproj = "*"
-pycrs = "*"
 shapely = "*"
 xarray = "*"
-dask = "*"
 matplotlib = "*"
-pyvista = "*"
 ipykernel = "*"
 jupyter = "*"
-h5netcdf = "*"
-netcdf4 = "*"
 geopandas = "*"
-pyogrio = "*"
+obspy = "*"
+pywavelets = ">=1.9.0,<2"
+pyogrio = ">=0.11.1,<0.12"
+gdal = "*"
+libgdal = "*"
 
 [tool.pixi.pypi-dependencies]
 deltaseis = { path = ".", editable = true }
