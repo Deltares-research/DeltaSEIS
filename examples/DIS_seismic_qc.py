@@ -5,7 +5,7 @@ import numpy as np
 
 
 # Use raw string (r"") to avoid escape sequence issues
-segy_folder = Path(r'D:\Projects\DIS\Texel_Sparker')
+segy_folder = Path(r'D:\Projects\DIS_Offshore\qc\example_sparker_data_texel')
 
 qc_folder = segy_folder / 'qc_reports'
 qc_folder.mkdir(parents=True, exist_ok=True)
