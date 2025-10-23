@@ -40,7 +40,7 @@ dependencies = [
     "segyio",
     "segpy",
     "segysak", 
-    "geost>=0.3.0,<0.4",
+    #"geost>=0.3.0,<0.4",
 ]
 
 [project.optional-dependencies]
@@ -78,7 +78,7 @@ line-length = 88
 
 [tool.ruff]
 line-length = 88
-target-version = "py312"
+target-version = "py313"
 select = ["F", "E", "W", "N", "I001"]
 ignore = ["F401"]
 unfixable = ["F401"]
@@ -88,9 +88,10 @@ convention = "numpy"
 
 [tool.pixi.project]
 channels = ["conda-forge"]
-platforms = ["win-64", "linux-64", "osx-64"]
+platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
 
 [tool.pixi.dependencies]
+gdal = "*"
 pip = "*"
 scipy = "*"
 numpy = "*"
@@ -104,7 +105,6 @@ geopandas = "*"
 obspy = "*"
 pywavelets = ">=1.9.0,<2"
 pyogrio = ">=0.11.1,<0.12"
-gdal = "*"
 libgdal = "*"
 
 [tool.pixi.pypi-dependencies]
