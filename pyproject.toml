@@ -114,6 +114,10 @@ deltaseis = { path = ".", editable = true }
 default = { solve-group = "default" }
 dev = { features = ["dev"], solve-group = "default" }
 
+# Set GDAL_DATA environment variable to fix GDAL warnings
+[tool.pixi.activation]
+env = { GDAL_DATA = "$PIXI_PROJECT_ROOT/.pixi/envs/default/Library/share/gdal" }
+
 [tool.pixi.tasks]
 notebook = "jupyter notebook ./tutorials/segy_editing.ipynb"
 
