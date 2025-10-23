@@ -1,4 +1,9 @@
 #%%
+# NOTE: This tutorial requires data files that are not included in the Git repository
+# to keep the repository size small. See deltaseis/data/README.md for information on
+# obtaining the example data files (bergen0111a.sgy and bathy_clip_bergen0111a.asc).
+# Alternatively, you can use your own seismic data files by modifying the paths below.
+
 from importlib import resources
 from pathlib import Path
 
