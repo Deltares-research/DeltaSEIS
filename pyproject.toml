@@ -40,7 +40,7 @@ dependencies = [
     "segyio",
     "segpy",
     "segysak", 
-    #"geost>=0.3.0,<0.4",
+    "geost>=0.3.0,<0.4",
 ]
 
 [project.optional-dependencies]
@@ -88,7 +88,7 @@ convention = "numpy"
 
 [tool.pixi.project]
 channels = ["conda-forge"]
-platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
+platforms = ["win-64", "linux-64", "osx-64"]
 
 [tool.pixi.dependencies]
 gdal = "*"
