@@ -26,7 +26,7 @@ for i, segy_file in enumerate(segy_files):
     s.set_crs(4326)
 
     #s.set_scalar(-100)   
-    s.transform_coordinates(25831) #to RD (to WGS84 UTM31N = 32631)
+    s.transform_coordinates(25831) #to ETRS89 UTM31N (to WGS84 UTM31N = 32631)
     s.renumber_shotpoints()
     
     data = np.array(s.trace_data).T #transpose zodat tijd op 'y' (rijen) trace op 'x' (kolommen)
