@@ -1,0 +1,85 @@
+# -*- coding: utf-8 -*-
+"""
+Iterate through subfolders in a given directory, load all oscilloscope CSV files,
+concatenate and convert to SEG-Y using DeltaSEIS segy_editor and reader_seismic_oscilloscope.
+Saves the SEG-Y file in each subfolder, named after the subfolder.
+"""
+
+import os
+from pathlib import Path
+from deltaseis.readers.reader_seismic_oscilloscope import read_waveforms_csv
+import segyio
+import numpy as np
+import csv
+
+# Set your base directory here
+base_dir = r"c:\Users\nieboer\OneDrive - Stichting Deltares\pulse testing\dis2025\Diepte38cm"
+number_of_best_shots = 100 # number of shots that have the highest amplitudes
+sampling_nanoseconds = True  # Set to True if sampling interval is in nanoseconds
+subfolder_name_filter = "hz"  # Set to None to select all subfolders, or a string to filter
+best_shots_list = []
+
+
+for subfolder in os.listdir(base_dir):
+    if subfolder_name_filter is not None and subfolder_name_filter.lower() not in subfolder.lower():
+        continue
+    subfolder_path = os.path.join(base_dir, subfolder)
+    if os.path.isdir(subfolder_path):
+        csv_files = [str(Path(subfolder_path) / f) for f in os.listdir(subfolder_path) if f.lower().endswith('.csv')]
+        if not csv_files:
+            continue
+        # Load CSVs
+        data_df, fs, t_start = read_waveforms_csv(csv_files, verbose=False)
+        print(f"{subfolder}: Loaded {len(csv_files)} files, sampling rate = {fs} Hz")
+        # Prepare trace data for SEG-Y (list of 1D numpy arrays)
+        trace_data = [np.array(data_df.iloc[:, i+1]) for i in range(len(csv_files))]
+        # Find max amplitude for each trace
+        max_amplitudes = [np.max(np.abs(tr)) for tr in trace_data]
+        # Select indices of best shots
+        n_best = min(number_of_best_shots, len(trace_data))
+        if number_of_best_shots > len(trace_data):
+            print(f"Warning: Requested {number_of_best_shots} best shots, but only {len(trace_data)} files available. Using all files.")
+        best_indices = np.argsort(max_amplitudes)[-n_best:][::-1]  # descending order
+        best_trace_data = [trace_data[i] for i in best_indices]
+        best_filepaths = [csv_files[i] for i in best_indices]
+        # For each best shot, get its t_start value
+        # Reload t_start for each best shot file
+        t_start_list = []
+        for f in best_filepaths:
+            # Read header lines to extract t_start
+            with open(f, 'r') as fin:
+                for _ in range(10):
+                    fin.readline()
+                first_data_line = fin.readline()
+                t_start_val = float(first_data_line.split(',')[0])
+                t_start_list.append(t_start_val)
+        # Save the file with the highest amplitude for this subfolder
+        best_shots_list.append([subfolder, best_filepaths[0]])
+        # Create minimal SEG-Y file using segyio
+        n_traces = len(best_trace_data)
+        n_samples = len(best_trace_data[0])
+        segy_dir = Path(base_dir) / "segy"
+        segy_dir.mkdir(exist_ok=True)
+        segy_out_path = str(segy_dir / (subfolder + ".sgy"))
+        # Minimal spec setup
+        spec = segyio.spec()
+        spec.format = segyio.SegySampleFormat(5)
+        spec.samples = np.arange(n_samples)
+        spec.tracecount = n_traces
+
+        # Write SEG-Y
+        with segyio.create(segy_out_path, spec) as dst:
+            for i, tr in enumerate(best_trace_data):
+                dst.trace[i] = tr.astype(np.float32)
+            if sampling_nanoseconds:
+                dst.bin[segyio.BinField.Interval] = int(1e9 / fs)
+            else:
+                dst.bin[segyio.BinField.Interval] = int(1e6 / fs)
+
+# Save best_shots.csv in the main folder
+best_shots_csv_path = str(Path(base_dir).parent / "best_shots.csv")
+with open(best_shots_csv_path, "w", newline="") as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(["subfolder", "best_shot_filepath"])
+    for row in best_shots_list:
+        writer.writerow(row)
