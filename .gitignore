@@ -108,19 +108,41 @@ ENV/
 *.gml
 *.dbf
 
+# Large binary data files - these should not be tracked in Git
+# Seismic data files
+*.sgy
+*.seg-y
+*.seg2
+*.segd
+*.semd
+*.tdms
 
-# data
-#*.xml
-#*.pdf
-#*.tif
-#*.cpg
-#*.dbf
-#*.prj
-#*.shp
-#*.shx
-#*.jpg
-#*.kml
-#*.zip
+# Images and media files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.avi
+*.mp4
+*.mov
+
+# Other large binary files
+*.pkl
+*.pickle
+*.asc
+*.pdf
+
+# Geospatial data
+*.xml
+*.tif
+*.cpg
+*.prj
+*.shp
+*.shx
+*.kml
+*.zip
 
 # VS-Code
 *.code-workspace
