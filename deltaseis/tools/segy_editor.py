@@ -375,6 +375,7 @@ class Segy_edit:
                         self.y = (3600 * x_transformed / self.factor).astype(np.int32)
                         self.x = (3600 * y_transformed / self.factor).astype(np.int32)
                     self.crs = CRS.from_epsg(epsg_out)
+                    print(f"CRS converted to EPSG:{epsg_out}")
 
                 except:
                     raise ValueError(

@@ -8,7 +8,7 @@ import deltaseis
 from deltaseis import Segy_edit
 
 # refer to deltaseis data path
-data_folder = Path(resources.files('deltaseis.data'))
+data_folder = resources.files('deltaseis.data')
 
 # set path to segy file
 segy_file = data_folder / "bergen0111a.sgy"

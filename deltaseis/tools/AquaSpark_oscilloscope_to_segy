@@ -13,10 +13,11 @@ import numpy as np
 import csv
 
 # Set your base directory here
-base_dir = r"c:\Users\nieboer\OneDrive - Stichting Deltares\pulse testing\dis2025\Diepte38cm"
+base_dir = r"c:\Users\nieboer\OneDrive - Stichting Deltares\pulse testing\dis2025\Diepte21cm"
 number_of_best_shots = 100 # number of shots that have the highest amplitudes
 sampling_nanoseconds = True  # Set to True if sampling interval is in nanoseconds
 subfolder_name_filter = "hz"  # Set to None to select all subfolders, or a string to filter
+set_record_length_ms = 2.635  # Set to a value in milliseconds to cut signal length, or None to use full length
 best_shots_list = []
 
 
@@ -33,6 +34,15 @@ for subfolder in os.listdir(base_dir):
         print(f"{subfolder}: Loaded {len(csv_files)} files, sampling rate = {fs} Hz")
         # Prepare trace data for SEG-Y (list of 1D numpy arrays)
         trace_data = [np.array(data_df.iloc[:, i+1]) for i in range(len(csv_files))]
+        
+        # Cut signal length if set_record_length_ms is specified
+        if set_record_length_ms is not None:
+            # Calculate number of samples to keep based on sampling rate and desired length
+            n_samples_to_keep = int((set_record_length_ms / 1000.0) * fs)
+            # Cut each trace to the specified length
+            trace_data = [tr[:n_samples_to_keep] for tr in trace_data]
+            print(f"  Cut traces to {set_record_length_ms} ms ({n_samples_to_keep} samples)")
+        
         # Find max amplitude for each trace
         max_amplitudes = [np.max(np.abs(tr)) for tr in trace_data]
         # Select indices of best shots
@@ -77,7 +87,7 @@ for subfolder in os.listdir(base_dir):
                 dst.bin[segyio.BinField.Interval] = int(1e6 / fs)
 
 # Save best_shots.csv in the main folder
-best_shots_csv_path = str(Path(base_dir).parent / "best_shots.csv")
+best_shots_csv_path = str(Path(base_dir).parent / (Path(base_dir).name + "_best_shots.csv"))
 with open(best_shots_csv_path, "w", newline="") as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(["subfolder", "best_shot_filepath"])

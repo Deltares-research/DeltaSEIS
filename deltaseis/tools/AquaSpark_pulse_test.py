@@ -37,12 +37,11 @@ CONFIG = {
     'font_size': 16,
     'time_ylim_min': -1.3,            # Bar-m units y-axis minimum
     'time_ylim_max': 1.3,             # Bar-m units y-axis maximum
-    'spectra_ylim_min': -50,          # dB y-axis minimum
+    'spectra_ylim_min': -15,          # dB y-axis minimum
     'spectra_ylim_max': 5,            # dB y-axis maximum,
     'alignment_time': 3.0,            # ms, time to align peak to
     'start_time': 2.0,               # ms, start window (should be < alignment_time)
-    'end_time': 8.0,                  # ms, end window (should be > alignment_time)
-    'figure_title': "GSO 360 sparker pulse analysis (400 J)",
+    'end_time': 4.0,                  # ms, end window (should be > alignment_time, set to high number to include full trace)
     'number_of_best_shots': 100,        # Number of best shots to select by amplitude
     'subfolder_name_filter': 'hz'      # Set to None to select all subfolders, or a string to filter
 }
@@ -263,8 +262,18 @@ def main():
             frequencies, power_db = compute_spectrum(amp_proc)
             ax3.plot(frequencies, power_db, color=color, 
                     linewidth=CONFIG['line_width'], label=f"Shot {i+1}", alpha=0.7)
-            ax1.set_xlim(t_min, t_max)
-            ax2.set_xlim(t_min, t_max)
+            # Adjust x-axis limits if CONFIG['end_time'] is less than t_max
+            end_time_ms = CONFIG['end_time']
+
+            if end_time_ms < t_max:
+                ax1.set_xlim(t_min, end_time_ms)
+                ax2.set_xlim(t_min, end_time_ms)
+            else:
+                ax1.set_xlim(t_min, t_max)
+                ax2.set_xlim(t_min, t_max)
+            
+                ax1.set_xlim(t_min, t_max)
+                ax2.set_xlim(t_min, t_max)
 
         # Set figure title to output file name
         output_path = figures_dir / f"{subfolder.name}_stacked.png"

@@ -6,41 +6,45 @@ Created on Wed Oct 22 12:53:28 2025
 """
 
 from pathlib import Path
+from importlib import resources
 import deltaseis
 import numpy as np
 import os
 from matplotlib import pyplot as plt
 
-indir = Path(r'D:\Projects\DIS_Offshore\marsdiep2015_xstar')
-outdir = Path(r'D:\Projects\DIS_Offshore\marsdiep2015_xstar\output')
+segy_folder = Path(r'D:\Projects\DIS_Offshore\data\xstar')
+
+# Ensure output subdirectory 'deltaseis' exists
+output_folder = segy_folder / 'deltaseis'
+output_folder.mkdir(parents=True, exist_ok=True)
+
+# Output file suffix
+output_suffix = "trace_av1_full"
+
+grid_path = resources.files('deltaseis.data') / "bathy_clip_bergen0111a.asc"
+
 
 #%% loop
-segy_files = os.listdir(indir)
-for i, segy_file in enumerate(segy_files):
-    print(f"{i+1}/{len(segy_files)}: {segy_file}")
+segy_paths = [f for f in segy_folder.iterdir() if f.suffix.lower() in {'.sgy', '.seg', '.segy'}]
 
-    f = Path(indir,segy_file)
-    s = deltaseis.Segy_edit(f) 
-    s.xstar_split()
-    s.set_record_length(30)
+for i, segy_path in enumerate(segy_paths):
+    print(f"{i+1}/{len(segy_paths)}: {segy_path.name}")
+
+    s = deltaseis.Segy_edit(segy_path) 
+    s.xstar_split('full')
+    #s.set_record_length(30)
+
+    # set the input crs WGS 84 and transform to ETRS89 UTM31N
     s.set_crs(4326)
+    s.transform_coordinates(25831)
 
-    #s.set_scalar(-100)   
-    s.transform_coordinates(25831) #to ETRS89 UTM31N (to WGS84 UTM31N = 32631)
-    s.renumber_shotpoints()
-    
-    data = np.array(s.trace_data).T #transpose zodat tijd op 'y' (rijen) trace op 'x' (kolommen)
-    seis = deltaseis.Seismic(data,12.5,0.5)
+    # data processing
+    seis = deltaseis.Seismic(np.array(s.trace_data).T,20,0.4)
     # seis.time_power_gain()
-    seis.trace_averaging()
-    data2 = seis.data.T
+    seis.trace_averaging(1)
+        
+    s.trace_data = seis.data.T
+    #s.trace_data = (32767/np.max(data))*data #normalize to fit in int16 format
     
-    s.trace_data = (32767/np.max(data2))*data2 #normalize to fit in int16 format
-    
-    # s.plot()
-    # plt.savefig(Path(outdir,'pngs',f"{f.stem}.png"))
-    # plt.close()
-    
-    s.set_endian('big')
-    
-    s.write(Path(outdir,f"{f.stem}_edit{f.suffix}y"))
+    s.renumber_shotpoints()
+    s.write(output_folder / f"{segy_path.stem}_{output_suffix}.sgy")
