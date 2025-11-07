@@ -362,6 +362,451 @@ class Seismic:
         else:
             return data_bandpass[:, 1:]    
 
+    def optimize_signature_window(self, trace_number, start_time_ms, end_time_ms,
+                                  time_search_ms=2.0, length_search_ms=0.5,
+                                  criterion='spectral_flatness', plot=False):
+        """
+        Automatically optimize the signature wavelet extraction window.
+        
+        This method searches around the specified time window to find the optimal
+        wavelet extraction parameters based on various quality criteria.
+        
+        Parameters
+        ----------
+        trace_number : int
+            Trace number to extract signature from (0-indexed)
+        start_time_ms : float
+            Initial start time in milliseconds (will be refined)
+        end_time_ms : float
+            Initial end time in milliseconds (will be refined)
+        time_search_ms : float, optional
+            Search range in milliseconds to shift the window. Default is 2.0 ms.
+            The window will be tested at positions from -time_search_ms to +time_search_ms.
+        length_search_ms : float, optional
+            Search range for window length adjustment. Default is 0.5 ms.
+            The window length will be tested from original ± length_search_ms.
+        criterion : str, optional
+            Optimization criterion. Default is 'spectral_flatness'.
+            Options:
+            - 'spectral_flatness': Maximize spectral flatness (whitest spectrum)
+            - 'energy': Maximize RMS energy (strongest signal)
+            - 'kurtosis': Maximize kurtosis (most impulsive/spiky)
+            - 'bandwidth': Maximize bandwidth (broadest spectrum)
+        plot : bool, optional
+            If True, displays diagnostic plots. Default is False.
+            
+        Returns
+        -------
+        dict
+            Dictionary with optimized parameters:
+            - 'start_time_ms': Optimized start time
+            - 'end_time_ms': Optimized end time
+            - 'quality_score': Quality metric value
+            - 'signature': Extracted signature wavelet
+            
+        Examples
+        --------
+        >>> seis = Seismic(data, fs=50000, dx=0.4)
+        >>> result = seis.optimize_signature_window(6415, 30.5, 31.7)
+        >>> print(f"Optimized window: {result['start_time_ms']:.2f} - {result['end_time_ms']:.2f} ms")
+        >>> # Use optimized parameters for deconvolution
+        >>> seis.signature_deconvolution(6415, result['start_time_ms'], result['end_time_ms'])
+        """
+        
+        n_samples, n_traces = self.data.shape
+        dt = 1.0 / self.fs
+        
+        # Validate trace number
+        if trace_number < 0 or trace_number >= n_traces:
+            raise ValueError(f"trace_number {trace_number} out of bounds: 0-{n_traces-1}")
+        
+        # Convert times to samples
+        center_time_ms = (start_time_ms + end_time_ms) / 2.0
+        initial_length_ms = end_time_ms - start_time_ms
+        
+        # Define search grid
+        time_shifts = np.linspace(-time_search_ms, time_search_ms, 21)  # 21 positions
+        length_adjustments = np.linspace(-length_search_ms, length_search_ms, 11)  # 11 lengths
+        
+        best_score = -np.inf
+        best_params = None
+        results = []
+        
+        print(f"Optimizing signature window for trace {trace_number}...")
+        print(f"  Initial window: {start_time_ms:.2f} - {end_time_ms:.2f} ms ({initial_length_ms:.2f} ms long)")
+        print(f"  Search: ±{time_search_ms:.2f} ms position, ±{length_search_ms:.2f} ms length")
+        print(f"  Criterion: {criterion}")
+        
+        # Search over all combinations
+        for time_shift in time_shifts:
+            for length_adj in length_adjustments:
+                # Calculate new window
+                new_center = center_time_ms + time_shift
+                new_length = initial_length_ms + length_adj
+                new_start_ms = new_center - new_length / 2.0
+                new_end_ms = new_center + new_length / 2.0
+                
+                # Convert to samples
+                new_start_samp = int(new_start_ms * self.fs / 1000.0)
+                new_end_samp = int(new_end_ms * self.fs / 1000.0)
+                
+                # Check bounds
+                if new_start_samp < 0 or new_end_samp >= n_samples or new_start_samp >= new_end_samp:
+                    continue
+                
+                # Extract signature
+                sig = self.data[new_start_samp:new_end_samp, trace_number]
+                
+                if len(sig) < 5:  # Minimum length check
+                    continue
+                
+                # Calculate quality metric
+                score = self._calculate_wavelet_quality(sig, criterion)
+                
+                results.append({
+                    'start_ms': new_start_ms,
+                    'end_ms': new_end_ms,
+                    'length_ms': new_length,
+                    'score': score,
+                    'signature': sig
+                })
+                
+                if score > best_score:
+                    best_score = score
+                    best_params = {
+                        'start_time_ms': new_start_ms,
+                        'end_time_ms': new_end_ms,
+                        'quality_score': score,
+                        'signature': sig
+                    }
+        
+        if best_params is None:
+            raise ValueError("Could not find valid signature window in search range")
+        
+        print(f"  ✓ Optimized window: {best_params['start_time_ms']:.2f} - {best_params['end_time_ms']:.2f} ms")
+        print(f"  Quality score: {best_score:.4f}")
+        print(f"  Improvement: {best_params['start_time_ms'] - start_time_ms:+.2f} ms start, "
+              f"{best_params['end_time_ms'] - end_time_ms:+.2f} ms end")
+        
+        # Optional plotting
+        if plot:
+            self._plot_signature_optimization(results, best_params, trace_number, 
+                                             start_time_ms, end_time_ms, criterion)
+        
+        return best_params
+    
+    def _calculate_wavelet_quality(self, signature, criterion):
+        """Calculate quality metric for a signature wavelet."""
+        
+        if criterion == 'energy':
+            # RMS energy
+            return np.sqrt(np.mean(signature**2))
+        
+        elif criterion == 'kurtosis':
+            # Kurtosis (fourth moment) - measures "spikiness"
+            if len(signature) < 4:
+                return -np.inf
+            mean = np.mean(signature)
+            std = np.std(signature)
+            if std == 0:
+                return -np.inf
+            return np.mean(((signature - mean) / std)**4)
+        
+        elif criterion == 'spectral_flatness':
+            # Spectral flatness (ratio of geometric to arithmetic mean of power spectrum)
+            # Higher = flatter/whiter spectrum = better for deconvolution
+            sig_fft = np.fft.rfft(signature)
+            power = np.abs(sig_fft)**2
+            power = power[power > 0]  # Remove zeros for log
+            if len(power) == 0:
+                return -np.inf
+            geometric_mean = np.exp(np.mean(np.log(power)))
+            arithmetic_mean = np.mean(power)
+            if arithmetic_mean == 0:
+                return -np.inf
+            return geometric_mean / arithmetic_mean
+        
+        elif criterion == 'bandwidth':
+            # Effective bandwidth (based on -3dB points)
+            sig_fft = np.fft.rfft(signature)
+            power = np.abs(sig_fft)**2
+            max_power = np.max(power)
+            if max_power == 0:
+                return -np.inf
+            power_normalized = power / max_power
+            # Find frequencies above -3dB (0.5 in linear scale)
+            above_half_power = power_normalized > 0.5
+            if not np.any(above_half_power):
+                return -np.inf
+            bandwidth = np.sum(above_half_power)  # Count of frequency bins
+            return float(bandwidth)
+        
+        else:
+            raise ValueError(f"Unknown criterion: {criterion}")
+    
+    def _plot_signature_optimization(self, results, best_params, trace_number, 
+                                     original_start, original_end, criterion):
+        """Plot diagnostic information about signature optimization."""
+        import matplotlib.pyplot as plt
+        
+        # Convert results to arrays for plotting
+        starts = np.array([r['start_ms'] for r in results])
+        ends = np.array([r['end_ms'] for r in results])
+        lengths = np.array([r['length_ms'] for r in results])
+        scores = np.array([r['score'] for r in results])
+        
+        fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+        fig.suptitle(f'Signature Window Optimization - Trace {trace_number}', fontsize=14, fontweight='bold')
+        
+        # 1. Score vs start time
+        ax = axes[0, 0]
+        scatter = ax.scatter(starts, scores, c=lengths, cmap='viridis', s=30, alpha=0.6)
+        ax.axvline(original_start, color='r', linestyle='--', alpha=0.5, label='Original')
+        ax.axvline(best_params['start_time_ms'], color='g', linestyle='-', linewidth=2, label='Optimized')
+        ax.set_xlabel('Start time (ms)')
+        ax.set_ylabel(f'Quality score ({criterion})')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        plt.colorbar(scatter, ax=ax, label='Window length (ms)')
+        
+        # 2. Score vs window length
+        ax = axes[0, 1]
+        ax.scatter(lengths, scores, c=starts, cmap='plasma', s=30, alpha=0.6)
+        original_length = original_end - original_start
+        best_length = best_params['end_time_ms'] - best_params['start_time_ms']
+        ax.axvline(original_length, color='r', linestyle='--', alpha=0.5, label='Original')
+        ax.axvline(best_length, color='g', linestyle='-', linewidth=2, label='Optimized')
+        ax.set_xlabel('Window length (ms)')
+        ax.set_ylabel(f'Quality score ({criterion})')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        
+        # 3. 2D heatmap of scores
+        ax = axes[0, 2]
+        # Create grid for heatmap
+        unique_starts = np.unique(starts)
+        unique_lengths = np.unique(lengths)
+        score_grid = np.full((len(unique_lengths), len(unique_starts)), np.nan)
+        for r in results:
+            i = np.where(unique_lengths == r['length_ms'])[0][0]
+            j = np.where(unique_starts == r['start_ms'])[0][0]
+            score_grid[i, j] = r['score']
+        
+        im = ax.imshow(score_grid, aspect='auto', origin='lower', cmap='RdYlGn',
+                      extent=[unique_starts[0], unique_starts[-1], 
+                             unique_lengths[0], unique_lengths[-1]])
+        ax.plot(original_start, original_length, 'r*', markersize=15, label='Original')
+        ax.plot(best_params['start_time_ms'], best_length, 'g*', markersize=20, label='Optimized')
+        ax.set_xlabel('Start time (ms)')
+        ax.set_ylabel('Window length (ms)')
+        ax.set_title('Score Heatmap')
+        ax.legend()
+        plt.colorbar(im, ax=ax, label='Score')
+        
+        # 4. Original wavelet
+        ax = axes[1, 0]
+        dt = 1.0 / self.fs
+        start_samp_orig = int(original_start * self.fs / 1000.0)
+        end_samp_orig = int(original_end * self.fs / 1000.0)
+        sig_orig = self.data[start_samp_orig:end_samp_orig, trace_number]
+        time_orig = np.arange(len(sig_orig)) * dt * 1000 + original_start
+        ax.plot(time_orig, sig_orig, 'r-', linewidth=1.5, label='Original window')
+        ax.set_xlabel('Time (ms)')
+        ax.set_ylabel('Amplitude')
+        ax.set_title('Original Signature')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        
+        # 5. Optimized wavelet
+        ax = axes[1, 1]
+        sig_opt = best_params['signature']
+        time_opt = np.arange(len(sig_opt)) * dt * 1000 + best_params['start_time_ms']
+        ax.plot(time_opt, sig_opt, 'g-', linewidth=1.5, label='Optimized window')
+        ax.set_xlabel('Time (ms)')
+        ax.set_ylabel('Amplitude')
+        ax.set_title('Optimized Signature')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        
+        # 6. Frequency comparison
+        ax = axes[1, 2]
+        fft_orig = np.fft.rfft(sig_orig)
+        fft_opt = np.fft.rfft(sig_opt)
+        freqs_orig = np.fft.rfftfreq(len(sig_orig), dt)
+        freqs_opt = np.fft.rfftfreq(len(sig_opt), dt)
+        ax.semilogy(freqs_orig/1000, np.abs(fft_orig)**2, 'r-', linewidth=1, alpha=0.7, label='Original')
+        ax.semilogy(freqs_opt/1000, np.abs(fft_opt)**2, 'g-', linewidth=1.5, label='Optimized')
+        ax.set_xlabel('Frequency (kHz)')
+        ax.set_ylabel('Power Spectrum')
+        ax.set_title('Frequency Content Comparison')
+        ax.set_xlim([0, 20])
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        filename = f'signature_optimization_trace{trace_number}.png'
+        plt.savefig(filename, dpi=150, bbox_inches='tight')
+        print(f"  Saved diagnostic plot: {filename}")
+        plt.show()
+    
+    def signature_deconvolution(self, trace_number, start_time_ms, end_time_ms,
+                                method='wiener', epsilon=0.01, prewhiten=True, 
+                                prewhiten_percent=1.0, auto_optimize=False,
+                                optimize_criterion='spectral_flatness', inplace=True):
+        """
+        Deconvolve seismic data using a signature wavelet extracted from a specified trace.
+        This improves vertical resolution by removing the source/system signature.
+        
+        The deconvolution is applied in the frequency domain and is fully vectorized
+        for efficient processing of multiple traces.
+        
+        Parameters
+        ----------
+        trace_number : int
+            Trace number to extract the signature wavelet from (0-indexed)
+        start_time_ms : float
+            Start time in milliseconds for signature extraction window
+        end_time_ms : float
+            End time in milliseconds for signature extraction window
+        method : str, optional
+            Deconvolution method: 'wiener', 'spiking', or 'water-level'. 
+            Default is 'wiener'.
+            - 'wiener': Wiener deconvolution (frequency domain, stable)
+            - 'spiking': Spiking deconvolution (assumes minimum phase)
+            - 'water-level': Water-level deconvolution (stabilized inverse)
+        epsilon : float, optional
+            Stabilization parameter (noise level). Default is 0.01 (1%).
+            Typical range: 0.001-0.1
+        prewhiten : bool, optional
+            Apply pre-whitening to signature. Default is True (recommended).
+        prewhiten_percent : float, optional
+            Pre-whitening percentage (0-100). Default is 1.0%.
+            Typical range: 0.5-5.0
+        auto_optimize : bool, optional
+            If True, automatically optimizes the signature extraction window.
+            Default is False. Uses optimize_signature_window() internally.
+        optimize_criterion : str, optional
+            Criterion for automatic optimization (if auto_optimize=True).
+            Default is 'spectral_flatness'.
+            Options: 'spectral_flatness', 'energy', 'kurtosis', 'bandwidth'
+        inplace : bool, optional
+            If True, modifies self.data. If False, returns deconvolved data.
+            Default is True.
+            
+        Returns
+        -------
+        numpy.ndarray or None
+            If inplace=False, returns deconvolved data array.
+            If inplace=True, modifies self.data in place and returns None.
+            
+        Examples
+        --------
+        >>> seis = Seismic(data, fs=1000, dx=1.0)
+        >>> # Manual window specification
+        >>> seis.signature_deconvolution(50, 10, 30, method='wiener', epsilon=0.01)
+        >>> 
+        >>> # With automatic window optimization
+        >>> seis.signature_deconvolution(50, 10, 30, auto_optimize=True)
+        """
+        
+        # Auto-optimize window if requested
+        if auto_optimize:
+            print("Auto-optimizing signature window...")
+            opt_result = self.optimize_signature_window(
+                trace_number, start_time_ms, end_time_ms,
+                criterion=optimize_criterion, plot=False
+            )
+            start_time_ms = opt_result['start_time_ms']
+            end_time_ms = opt_result['end_time_ms']
+            print(f"Using optimized window: {start_time_ms:.2f} - {end_time_ms:.2f} ms")
+        
+        # Validate inputs
+        n_samples, n_traces = self.data.shape
+        
+        if trace_number < 0 or trace_number >= n_traces:
+            raise ValueError(f"trace_number {trace_number} is out of bounds. Valid range: 0-{n_traces-1}")
+        
+        # Convert time to sample indices (fs is in Hz, so convert ms to seconds first)
+        start_sample = int(start_time_ms * self.fs / 1000.0)
+        end_sample = int(end_time_ms * self.fs / 1000.0)
+        
+        # Calculate max time in ms
+        max_time_ms = (n_samples / self.fs) * 1000.0
+        
+        # Validate sample indices
+        if start_sample < 0 or start_sample >= n_samples:
+            raise ValueError(f"start_time_ms {start_time_ms} is out of bounds. Valid range: 0-{max_time_ms:.2f} ms")
+        if end_sample <= start_sample or end_sample > n_samples:
+            raise ValueError(f"end_time_ms {end_time_ms} is invalid. Must be > {start_time_ms} and <= {max_time_ms:.2f} ms")
+        
+        # Extract signature wavelet from specified trace and time window
+        signature = self.data[start_sample:end_sample, trace_number].copy()
+        n_sig = len(signature)
+        
+        if n_sig == 0:
+            raise ValueError(f"Extracted signature has zero length. Check time window: {start_time_ms}-{end_time_ms} ms")
+        
+        n_data = self.data.shape[0]
+        
+        # Pad signature to match data length for frequency domain operations
+        signature_padded = np.zeros(n_data)
+        signature_padded[:n_sig] = signature
+        
+        # Apply pre-whitening to signature (recommended for stability)
+        if prewhiten:
+            whitening_factor = prewhiten_percent / 100.0
+            max_sig_amp = np.max(np.abs(signature))
+            if max_sig_amp > 0:
+                signature_padded[:n_sig] = signature + whitening_factor * max_sig_amp
+            else:
+                print("Warning: Signature has zero amplitude, skipping pre-whitening")
+        
+        # Transform to frequency domain (vectorized for all traces)
+        sig_fft = np.fft.fft(signature_padded)
+        data_fft = np.fft.fft(self.data, axis=0)
+        
+        # Apply deconvolution based on method
+        if method == 'wiener':
+            # Wiener deconvolution: optimal in least-squares sense
+            sig_power = np.abs(sig_fft)**2
+            # Use constant stabilization (noise power estimate)
+            # This provides uniform regularization across all frequencies
+            noise_power = epsilon * np.mean(sig_power)  # Estimate of noise power
+            wiener_filter = np.conj(sig_fft) / (sig_power + noise_power)
+            # Apply to all traces (broadcasting)
+            deconvolved_fft = data_fft * wiener_filter[:, np.newaxis]
+            
+        elif method == 'spiking':
+            # Spiking deconvolution: assumes minimum phase
+            sig_power = np.abs(sig_fft)**2
+            # Inverse filter with water-level stabilization
+            inverse_filter = 1.0 / (sig_fft + epsilon * np.max(np.abs(sig_fft)))
+            deconvolved_fft = data_fft * inverse_filter[:, np.newaxis]
+            
+        elif method == 'water-level':
+            # Water-level deconvolution: prevents division by small values
+            water_level = epsilon * np.max(np.abs(sig_fft))
+            # Create stabilized inverse
+            sig_fft_stab = np.where(np.abs(sig_fft) < water_level, 
+                                   water_level * np.exp(1j * np.angle(sig_fft)), 
+                                   sig_fft)
+            inverse_filter = 1.0 / sig_fft_stab
+            deconvolved_fft = data_fft * inverse_filter[:, np.newaxis]
+            
+        else:
+            raise ValueError(f"Unknown method '{method}'. Use 'wiener', 'spiking', or 'water-level'.")
+        
+        # Transform back to time domain
+        deconvolved_data = np.real(np.fft.ifft(deconvolved_fft, axis=0))
+        
+        # Update or return
+        if inplace:
+            self.data = deconvolved_data
+            print(f"Signature deconvolution applied using {method} method")
+            print(f"Signature extracted from trace {trace_number}, time {start_time_ms}-{end_time_ms} ms")
+        else:
+            return deconvolved_data
+
 
     def fk_spectrum(self, pad_t=2, pad_x=2):
         '''
