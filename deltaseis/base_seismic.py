@@ -358,9 +358,9 @@ class Seismic:
         data_bandpass = signal.filtfilt(b, a, self.data * win[:, np.newaxis], axis=0)
 
         if inplace==True:
-            self.data_bandpass = data_bandpass[:, 1:]
+            self.data = data_bandpass
         else:
-            return data_bandpass[:, 1:]    
+            return data_bandpass    
 
     def optimize_signature_window(self, trace_number, start_time_ms, end_time_ms,
                                   time_search_ms=2.0, length_search_ms=0.5,
@@ -807,6 +807,138 @@ class Seismic:
         else:
             return deconvolved_data
 
+    def top_mute(self, horizon, shift_ms=0.0, taper_ms=0.0, inplace=True):
+        """
+        Apply a top mute to zero out amplitudes above a specified horizon.
+        
+        This is commonly used to remove noise or unwanted data above the seabed
+        or first breaks. The mute can be shifted and optionally tapered to avoid
+        sharp discontinuities.
+        
+        Parameters
+        ----------
+        horizon : float or array-like
+            Mute time(s) in milliseconds.
+            - float: constant mute time applied to all traces
+            - array: time value for each trace (length must equal number of traces)
+        shift_ms : float, optional
+            Shift the mute boundary in milliseconds. Default is 0.0.
+            - Positive values: mute MORE data (extend mute zone deeper)
+            - Negative values: mute LESS data (preserve more signal)
+            Example: shift_ms=-1.0 mutes everything above (horizon - 1 ms)
+        taper_ms : float, optional
+            Length of cosine taper in milliseconds at the mute boundary.
+            Default is 0.0 (hard cutoff).
+            The taper smoothly ramps from 0 (muted) to 1 (preserved) over this duration.
+        inplace : bool, optional
+            If True, modifies self.data in place. If False, returns muted data.
+            Default is True.
+            
+        Returns
+        -------
+        numpy.ndarray or None
+            If inplace=False, returns muted data array.
+            If inplace=True, modifies self.data in place and returns None.
+            
+        Examples
+        --------
+        >>> seis = Seismic(data, fs=50000, dx=0.4)
+        >>> # Mute above a constant time
+        >>> seis.top_mute(horizon=10.0)
+        >>> 
+        >>> # Mute 1 ms above seabed pick (from Segy_edit object)
+        >>> seis.top_mute(horizon=s.seabed_pick, shift_ms=-1.0)
+        >>> 
+        >>> # Mute with 2 ms cosine taper
+        >>> seis.top_mute(horizon=s.seabed_pick, shift_ms=-1.0, taper_ms=2.0)
+        
+        Notes
+        -----
+        - Horizon times represent the mute boundary (data above is zeroed)
+        - With shift_ms > 0: mute extends DEEPER (more conservative)
+        - With shift_ms < 0: mute is SHALLOWER (preserves more data)
+        - Taper is applied BELOW the mute boundary (in preserved zone)
+        """
+        
+        n_samples, n_traces = self.data.shape
+        dt = 1.0 / self.fs  # sampling interval in seconds
+        
+        # Handle horizon input
+        if isinstance(horizon, (int, float)):
+            # Constant horizon for all traces
+            horizon_times = np.full(n_traces, horizon)
+        else:
+            # Array of horizon times
+            horizon_times = np.asarray(horizon)
+            if len(horizon_times) != n_traces:
+                raise ValueError(f"Horizon length ({len(horizon_times)}) must match number of traces ({n_traces})")
+        
+        # Check for NaN values and handle them
+        if np.any(np.isnan(horizon_times)):
+            print(f"Warning: {np.sum(np.isnan(horizon_times))} NaN values in horizon. These traces will not be muted.")
+        
+        # Apply shift
+        adjusted_horizon = horizon_times + shift_ms
+        
+        # Convert times from milliseconds to sample indices
+        horizon_samples = (adjusted_horizon * 1e-3 / dt).astype(int)
+        
+        # Calculate taper length in samples
+        taper_samples = int(taper_ms * 1e-3 / dt)
+        
+        # Create muted data (copy to avoid modifying original if inplace=False)
+        if inplace:
+            muted_data = self.data
+        else:
+            muted_data = self.data.copy()
+        
+        # Apply mute trace by trace
+        for trace_idx in range(n_traces):
+            horizon_samp = horizon_samples[trace_idx]
+            
+            # Skip if horizon is NaN
+            if np.isnan(horizon_times[trace_idx]):
+                continue
+            
+            # Skip if horizon is outside data range
+            if horizon_samp < 0:
+                # Horizon is before data start - mute entire trace
+                muted_data[:, trace_idx] = 0.0
+                continue
+            elif horizon_samp >= n_samples:
+                # Horizon is after data end - don't mute anything
+                continue
+            
+            # Zero out data above horizon
+            muted_data[:horizon_samp, trace_idx] = 0.0
+            
+            # Apply taper if requested
+            if taper_ms > 0 and taper_samples > 0:
+                # Define taper zone: from horizon_samp to horizon_samp + taper_samples
+                taper_end = min(horizon_samp + taper_samples, n_samples)
+                taper_length = taper_end - horizon_samp
+                
+                if taper_length > 0:
+                    # Create cosine taper (0 at top, 1 at bottom)
+                    # Using (1 - cos) / 2 for smooth 0 to 1 transition
+                    taper = (1.0 - np.cos(np.linspace(0, np.pi, taper_length))) / 2.0
+                    muted_data[horizon_samp:taper_end, trace_idx] *= taper
+        
+        # Print summary
+        valid_horizons = ~np.isnan(horizon_times)
+        if np.any(valid_horizons):
+            min_horizon = np.nanmin(adjusted_horizon)
+            max_horizon = np.nanmax(adjusted_horizon)
+            mean_horizon = np.nanmean(adjusted_horizon)
+            print(f"Top mute applied:")
+            print(f"  Horizon range: {min_horizon:.2f} - {max_horizon:.2f} ms (mean: {mean_horizon:.2f} ms)")
+            if shift_ms != 0:
+                print(f"  Shift: {shift_ms:+.2f} ms")
+            if taper_ms > 0:
+                print(f"  Taper: {taper_ms:.2f} ms ({taper_samples} samples)")
+        
+        if not inplace:
+            return muted_data
 
     def fk_spectrum(self, pad_t=2, pad_x=2):
         '''
