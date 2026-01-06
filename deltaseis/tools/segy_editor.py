@@ -1097,17 +1097,39 @@ class Segy_edit:
         self.indices = np.arange(self.trace_number)
 
     def full2envelope(self):
-            """
-            Transforms full waveform data to envelope data using Hilberts transformation
+        """
+        Transforms full waveform data to envelope data using Hilberts transformation
 
-            """
-            d = self.trace_data
-            if np.all(np.stack(d)>0):
-                print("""WARNING: ALL DATA VALUES ARE POSITIVE, this does not look like full wave form data, DATA IS NOT TRANSFORMED!!""")
-            else:
-                for i in range(len(d)):
-                    d[i] = np.abs(hilbert(d[i]))
-                self.trace_data = d
+        """
+        d = self.trace_data
+        if np.all(np.stack(d)>0):
+            print("""WARNING: ALL DATA VALUES ARE POSITIVE, this does not look like full wave form data, DATA IS NOT TRANSFORMED!!""")
+        else:
+            for i in range(len(d)):
+                d[i] = np.abs(hilbert(d[i]))
+            self.trace_data = d
+
+    def despike(self,cutoff):
+        """
+        Removes trace-to-trace spikes, e.g. due to interference.
+        Spikes are replaced by average of neighbouring traces.
+        Currently written for envelope data.
+
+        Parameters
+        ----------
+        cutoff: float
+            Cutoff amplitude value
+        """
+        data = np.array(self.trace_data)
+        data2 = np.vstack((data[0,:],data))
+        data3 = np.vstack((data,data[0,:]))
+        idx = (np.diff(data2,axis=0)>cutoff) & (np.diff(data3,axis=0)<-cutoff)
+        data[idx] = np.nan
+
+        df = pd.DataFrame(data)
+        df_filled = df.interpolate(method='linear', axis=0)
+
+        self.trace_data = df_filled.values
 
     def extract_near_trace_gather(self, number_of_channels, channel=1):
         """
