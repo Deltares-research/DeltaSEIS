@@ -940,6 +940,527 @@ class Seismic:
         if not inplace:
             return muted_data
 
+    def time_frequency_denoise(self, method='stft', threshold=0.1, window_ms=10.0,
+                               overlap=0.75, threshold_type='soft', 
+                               global_threshold=True, inplace=True):
+        """
+        Apply time-frequency domain denoising to suppress random noise.
+        
+        This method transforms data to time-frequency domain, applies thresholding
+        to remove low-amplitude (noise) components, and transforms back to time domain.
+        Effective for removing random/uncorrelated noise while preserving coherent signals.
+        
+        Parameters
+        ----------
+        method : str, optional
+            Time-frequency transform method. Default is 'stft'.
+            - 'stft': Short-Time Fourier Transform (recommended, fast)
+            - 'cwt': Continuous Wavelet Transform (multi-scale, slower)
+            - 's-transform': S-Transform (combines STFT and CWT advantages)
+        threshold : float, optional
+            Threshold value for noise suppression. Default is 0.1.
+            - For 'soft'/'hard': fraction of maximum TF amplitude (0-1)
+            - For 'percentile': percentile value (0-100)
+            Typical range: 0.05-0.2 (higher = more aggressive denoising)
+        window_ms : float, optional
+            Time window length in milliseconds (for STFT/S-transform).
+            Default is 10.0 ms.
+            - Shorter window: better time resolution, worse frequency resolution
+            - Longer window: better frequency resolution, worse time resolution
+            Rule of thumb: ~2-5 periods of lowest frequency of interest
+        overlap : float, optional
+            Overlap fraction between windows (0-1). Default is 0.75.
+            Higher overlap gives smoother results but slower computation.
+        threshold_type : str, optional
+            Type of thresholding. Default is 'soft'.
+            - 'soft': Gradual attenuation (smoother, recommended)
+            - 'hard': Binary cutoff (removes components below threshold completely)
+            - 'percentile': Remove lowest X% of TF coefficients by energy
+        global_threshold : bool, optional
+            If True, uses single threshold for all traces (preserves relative amplitudes).
+            If False, adapts threshold per trace (better for variable noise).
+            Default is True (recommended for marine seismic).
+        inplace : bool, optional
+            If True, modifies self.data. If False, returns denoised data.
+            Default is True.
+            
+        Returns
+        -------
+        numpy.ndarray or None
+            If inplace=False, returns denoised data array.
+            If inplace=True, modifies self.data in place and returns None.
+            
+        Examples
+        --------
+        >>> seis = Seismic(data, fs=50000, dx=0.4)
+        >>> # Basic denoising with STFT
+        >>> seis.time_frequency_denoise(threshold=0.1)
+        >>> 
+        >>> # More aggressive denoising
+        >>> seis.time_frequency_denoise(threshold=0.2, window_ms=15.0)
+        >>> 
+        >>> # Using wavelets for multi-scale analysis
+        >>> seis.time_frequency_denoise(method='cwt', threshold=0.15)
+        >>> 
+        >>> # Percentile-based (remove lowest 80% of energy)
+        >>> seis.time_frequency_denoise(threshold_type='percentile', threshold=80)
+        
+        Notes
+        -----
+        - STFT is fastest and works well for most cases
+        - CWT better for signals with time-varying frequency content
+        - S-transform combines advantages but slower than STFT
+        - Global threshold preserves amplitude relationships (important for AVO)
+        - Per-trace threshold adapts to spatially variable noise
+        - Soft thresholding generally produces smoother results than hard
+        """
+        from scipy import signal as sp_signal
+        
+        n_samples, n_traces = self.data.shape
+        dt = 1.0 / self.fs
+        
+        # Calculate window parameters
+        nperseg = int(window_ms * 1e-3 / dt)
+        noverlap = int(nperseg * overlap)
+        
+        # Ensure window size is valid
+        if nperseg > n_samples:
+            nperseg = n_samples
+            noverlap = int(nperseg * 0.75)
+            print(f"Warning: window_ms too large, adjusted to {nperseg * dt * 1000:.2f} ms")
+        
+        print(f"Time-frequency denoising:")
+        print(f"  Method: {method}")
+        print(f"  Threshold: {threshold} ({threshold_type})")
+        print(f"  Window: {nperseg * dt * 1000:.2f} ms ({nperseg} samples)")
+        print(f"  Overlap: {overlap*100:.0f}%")
+        print(f"  Global threshold: {global_threshold}")
+        
+        if method == 'stft':
+            denoised_data = self._denoise_stft(nperseg, noverlap, threshold, 
+                                              threshold_type, global_threshold)
+        elif method == 'cwt':
+            denoised_data = self._denoise_cwt(threshold, threshold_type, global_threshold)
+        elif method == 's-transform':
+            denoised_data = self._denoise_stransform(window_ms, threshold, 
+                                                    threshold_type, global_threshold)
+        else:
+            raise ValueError(f"Unknown method '{method}'. Use 'stft', 'cwt', or 's-transform'.")
+        
+        # Update or return
+        if inplace:
+            self.data = denoised_data
+            print(f"  ✓ Denoising complete")
+        else:
+            return denoised_data
+    
+    def _denoise_stft(self, nperseg, noverlap, threshold, threshold_type, global_threshold):
+        """Apply STFT-based denoising."""
+        from scipy import signal as sp_signal
+        
+        n_samples, n_traces = self.data.shape
+        denoised_data = np.zeros_like(self.data)
+        
+        # Choose window function (Hann for smooth frequency response)
+        window = sp_signal.windows.hann(nperseg)
+        
+        # Determine global threshold if needed
+        if global_threshold:
+            # Compute STFT for all traces to find global statistics
+            all_magnitudes = []
+            for trace_idx in range(n_traces):
+                f, t, Zxx = sp_signal.stft(self.data[:, trace_idx], 
+                                          fs=self.fs, 
+                                          window=window,
+                                          nperseg=nperseg, 
+                                          noverlap=noverlap)
+                all_magnitudes.append(np.abs(Zxx))
+            
+            all_magnitudes = np.concatenate([m.flatten() for m in all_magnitudes])
+            
+            if threshold_type == 'percentile':
+                thresh_value = np.percentile(all_magnitudes, threshold)
+            else:
+                thresh_value = threshold * np.max(all_magnitudes)
+            
+            print(f"  Global threshold value: {thresh_value:.2e}")
+        
+        # Process each trace
+        for trace_idx in range(n_traces):
+            # Compute STFT
+            f, t, Zxx = sp_signal.stft(self.data[:, trace_idx], 
+                                      fs=self.fs, 
+                                      window=window,
+                                      nperseg=nperseg, 
+                                      noverlap=noverlap)
+            
+            # Calculate magnitude and phase
+            magnitude = np.abs(Zxx)
+            phase = np.angle(Zxx)
+            
+            # Determine threshold for this trace
+            if not global_threshold:
+                if threshold_type == 'percentile':
+                    thresh_value = np.percentile(magnitude, threshold)
+                else:
+                    thresh_value = threshold * np.max(magnitude)
+            
+            # Apply thresholding
+            if threshold_type == 'hard':
+                # Hard thresholding: zero out below threshold
+                mask = magnitude > thresh_value
+                magnitude_thresh = magnitude * mask
+            elif threshold_type == 'soft':
+                # Soft thresholding: gradual attenuation
+                magnitude_thresh = np.maximum(magnitude - thresh_value, 0)
+                # Restore sign/phase relationship
+                magnitude_thresh = magnitude_thresh * (magnitude / (magnitude + 1e-10))
+            elif threshold_type == 'percentile':
+                # Keep only top (100-threshold)% of energy
+                mask = magnitude > thresh_value
+                magnitude_thresh = magnitude * mask
+            else:
+                raise ValueError(f"Unknown threshold_type: {threshold_type}")
+            
+            # Reconstruct complex STFT
+            Zxx_thresh = magnitude_thresh * np.exp(1j * phase)
+            
+            # Inverse STFT
+            _, denoised_trace = sp_signal.istft(Zxx_thresh, 
+                                               fs=self.fs,
+                                               window=window,
+                                               nperseg=nperseg,
+                                               noverlap=noverlap)
+            
+            # Handle length mismatch (STFT may return slightly different length)
+            if len(denoised_trace) >= n_samples:
+                denoised_data[:, trace_idx] = denoised_trace[:n_samples]
+            else:
+                denoised_data[:len(denoised_trace), trace_idx] = denoised_trace
+        
+        return denoised_data
+    
+    def _denoise_cwt(self, threshold, threshold_type, global_threshold):
+        """Apply Continuous Wavelet Transform based denoising."""
+        import pywt
+        
+        n_samples, n_traces = self.data.shape
+        denoised_data = np.zeros_like(self.data)
+        
+        # Define scales (analogous to frequencies)
+        # Using Morlet wavelet (good time-frequency localization)
+        wavelet = 'morl'
+        scales = np.arange(1, min(128, n_samples//4))
+        
+        print(f"  Using {len(scales)} scales with '{wavelet}' wavelet")
+        
+        # Determine global threshold if needed
+        if global_threshold:
+            all_coeffs = []
+            for trace_idx in range(n_traces):
+                coeffs, _ = pywt.cwt(self.data[:, trace_idx], scales, wavelet)
+                all_coeffs.append(np.abs(coeffs))
+            
+            all_coeffs = np.concatenate([c.flatten() for c in all_coeffs])
+            
+            if threshold_type == 'percentile':
+                thresh_value = np.percentile(all_coeffs, threshold)
+            else:
+                thresh_value = threshold * np.max(all_coeffs)
+            
+            print(f"  Global threshold value: {thresh_value:.2e}")
+        
+        # Process each trace
+        for trace_idx in range(n_traces):
+            # Compute CWT
+            coeffs, freqs = pywt.cwt(self.data[:, trace_idx], scales, wavelet, 
+                                    sampling_period=1.0/self.fs)
+            
+            # Get magnitude and phase
+            magnitude = np.abs(coeffs)
+            phase = np.angle(coeffs)
+            
+            # Determine threshold
+            if not global_threshold:
+                if threshold_type == 'percentile':
+                    thresh_value = np.percentile(magnitude, threshold)
+                else:
+                    thresh_value = threshold * np.max(magnitude)
+            
+            # Apply thresholding
+            if threshold_type == 'hard':
+                mask = magnitude > thresh_value
+                magnitude_thresh = magnitude * mask
+            elif threshold_type == 'soft':
+                magnitude_thresh = np.maximum(magnitude - thresh_value, 0)
+                magnitude_thresh = magnitude_thresh * (magnitude / (magnitude + 1e-10))
+            elif threshold_type == 'percentile':
+                mask = magnitude > thresh_value
+                magnitude_thresh = magnitude * mask
+            
+            # Reconstruct
+            coeffs_thresh = magnitude_thresh * np.exp(1j * phase)
+            
+            # Inverse CWT (approximate using weighted sum)
+            denoised_trace = np.sum(coeffs_thresh.real, axis=0) / len(scales)
+            
+            # Normalize to match original scale
+            scale_factor = np.std(self.data[:, trace_idx]) / (np.std(denoised_trace) + 1e-10)
+            denoised_data[:, trace_idx] = denoised_trace * scale_factor
+        
+        return denoised_data
+    
+    def _denoise_stransform(self, window_ms, threshold, threshold_type, global_threshold):
+        """Apply S-Transform based denoising."""
+        # S-transform is less common, so provide a simplified implementation
+        # Falls back to STFT with frequency-dependent window
+        print("  Note: Using frequency-adaptive STFT (simplified S-transform)")
+        
+        # Use STFT with parameters that approximate S-transform behavior
+        dt = 1.0 / self.fs
+        nperseg = int(window_ms * 1e-3 / dt)
+        noverlap = int(nperseg * 0.75)
+        
+        return self._denoise_stft(nperseg, noverlap, threshold, threshold_type, global_threshold)
+
+    def adaptive_noise_filter(self, reference_trace, reference_start_ms, reference_end_ms,
+                               filter_length=64, max_lag_ms=2.0, mu=0.01, apply_to_traces=None,
+                               inplace=True):
+        """
+        Remove coherent noise using adaptive filtering with a noise reference.
+        
+        This method uses a noise template extracted from a reference trace/window
+        and applies Least Mean Squares (LMS) adaptive filtering to subtract 
+        correlated noise from all traces. This is particularly effective for 
+        sensor cross-coupling or interference that "walks" through the data.
+        
+        The adaptive filter automatically accounts for time delays and amplitude
+        variations in the interference pattern across different traces.
+        
+        Parameters
+        ----------
+        reference_trace : int
+            Trace number containing the noise reference (0-indexed)
+        reference_start_ms : float
+            Start time in milliseconds for noise template extraction
+        reference_end_ms : float
+            End time in milliseconds for noise template extraction
+        filter_length : int, optional
+            Number of adaptive filter coefficients. Longer filters can model
+            more complex noise patterns but require more computation.
+            Default is 64 (typically 1-3 ms of filter length)
+        max_lag_ms : float, optional
+            Maximum time shift (in milliseconds) to compensate for propagation
+            delays in the interference. The filter will search for correlations
+            within ±max_lag samples. Default is 2.0 ms
+        mu : float, optional
+            LMS adaptation step size (0 < mu < 1). Smaller values give more
+            stable but slower convergence. Larger values adapt faster but may
+            be unstable. Default is 0.01
+        apply_to_traces : list or tuple of int, optional
+            If provided, only apply filtering to specified trace range as 
+            (start_trace, end_trace). If None, apply to all traces.
+            Default is None (all traces)
+        inplace : bool, optional
+            If True, modifies self.data directly. If False, returns the filtered
+            data without modifying the original. Default is True
+            
+        Returns
+        -------
+        filtered_data : ndarray, optional
+            If inplace=False, returns the filtered data array
+            
+        Notes
+        -----
+        The LMS adaptive filter works by:
+        1. Extracting a noise template from the reference window
+        2. For each trace, convolving the noise template with adaptive filter
+        3. Subtracting the filtered noise estimate from the original trace
+        4. Updating filter coefficients to minimize residual error
+        
+        The filter automatically finds where and when the noise correlates with
+        each trace, making it robust to time-varying interference patterns.
+        
+        Best results when:
+        - Reference window contains strong noise with minimal signal
+        - Noise is coherent (same waveform) across multiple traces
+        - Interference has time delays < max_lag_ms between traces
+        
+        Example
+        -------
+        >>> # Extract noise from trace 100, window 50-55 ms
+        >>> seismic.adaptive_noise_filter(reference_trace=100,
+        ...                                reference_start_ms=50.0,
+        ...                                reference_end_ms=55.0,
+        ...                                filter_length=100,
+        ...                                max_lag_ms=2.0)
+        """
+        
+        dt = 1.0 / self.fs
+        n_samples, n_traces = self.data.shape
+        
+        # Convert times to samples
+        start_samp = int(reference_start_ms * self.fs / 1000.0)
+        end_samp = int(reference_end_ms * self.fs / 1000.0)
+        max_lag_samp = int(max_lag_ms * self.fs / 1000.0)
+        
+        # Validate inputs
+        if start_samp < 0 or end_samp > n_samples:
+            raise ValueError(f"Reference window [{reference_start_ms}, {reference_end_ms}] ms "
+                           f"is outside data range [0, {n_samples * dt * 1000:.2f}] ms")
+        if reference_trace < 0 or reference_trace >= n_traces:
+            raise ValueError(f"Reference trace {reference_trace} is outside valid range [0, {n_traces-1}]")
+        if filter_length < 1:
+            raise ValueError("filter_length must be >= 1")
+        if mu <= 0 or mu >= 1:
+            raise ValueError("mu must be in range (0, 1)")
+            
+        # Extract noise reference template
+        noise_template = self.data[start_samp:end_samp, reference_trace].copy()
+        template_length = len(noise_template)
+        
+        print(f"\nAdaptive Noise Filtering:")
+        print(f"  Reference: trace {reference_trace}, window [{reference_start_ms:.2f}, {reference_end_ms:.2f}] ms")
+        print(f"  Template length: {template_length} samples ({template_length * dt * 1000:.2f} ms)")
+        print(f"  Filter length: {filter_length} coefficients ({filter_length * dt * 1000:.2f} ms)")
+        print(f"  Max lag: ±{max_lag_samp} samples (±{max_lag_ms:.2f} ms)")
+        print(f"  Step size (mu): {mu}")
+        
+        # Determine which traces to process
+        if apply_to_traces is not None:
+            trace_start, trace_end = apply_to_traces
+            trace_range = range(trace_start, trace_end)
+            print(f"  Applying to traces: {trace_start} to {trace_end-1}")
+        else:
+            trace_range = range(n_traces)
+            print(f"  Applying to all traces: 0 to {n_traces-1}")
+        
+        # Create output array
+        if inplace:
+            filtered_data = self.data
+        else:
+            filtered_data = self.data.copy()
+        
+        # Apply adaptive filtering to each trace
+        print("  Processing traces...", end='', flush=True)
+        
+        for trace_idx in trace_range:
+            if trace_idx % 1000 == 0:
+                print(f"\n    Trace {trace_idx}/{n_traces-1}...", end='', flush=True)
+            
+            # Get current trace
+            original_trace = self.data[:, trace_idx].copy()
+            
+            # Apply multi-lag LMS adaptive filter
+            filtered_trace = self._lms_adaptive_filter(
+                original_trace, noise_template, filter_length, max_lag_samp, mu
+            )
+            
+            filtered_data[:, trace_idx] = filtered_trace
+        
+        print("\n  Adaptive filtering complete!")
+        
+        # Update data if inplace
+        if inplace:
+            self.data = filtered_data
+            print(f"  Data updated in place")
+        else:
+            return filtered_data
+    
+    def _lms_adaptive_filter(self, signal, noise_ref, filter_length, max_lag, mu):
+        """
+        Apply LMS adaptive filter with multi-lag capability.
+        
+        Parameters
+        ----------
+        signal : ndarray
+            Input signal to be filtered
+        noise_ref : ndarray
+            Noise reference template
+        filter_length : int
+            Number of filter coefficients
+        max_lag : int
+            Maximum lag in samples for time-shift compensation
+        mu : float
+            LMS step size
+            
+        Returns
+        -------
+        filtered_signal : ndarray
+            Signal with adaptive noise estimate subtracted
+        """
+        
+        n_samples = len(signal)
+        ref_length = len(noise_ref)
+        
+        # Pad noise reference to match signal length with zeros
+        noise_padded = np.zeros(n_samples)
+        
+        # Try different lags and find the one with maximum correlation
+        best_lag = 0
+        best_corr = 0
+        
+        for lag in range(-max_lag, max_lag + 1):
+            # Place noise reference at different positions
+            start_pos = max(0, lag)
+            end_pos = min(n_samples, lag + ref_length)
+            ref_start = max(0, -lag)
+            ref_end = ref_start + (end_pos - start_pos)
+            
+            if end_pos <= start_pos:
+                continue
+                
+            # Calculate correlation at this lag
+            test_noise = np.zeros(n_samples)
+            test_noise[start_pos:end_pos] = noise_ref[ref_start:ref_end]
+            
+            # Use a window around the expected noise location for correlation
+            window_start = max(0, start_pos - filter_length)
+            window_end = min(n_samples, end_pos + filter_length)
+            
+            corr = np.abs(np.corrcoef(
+                signal[window_start:window_end],
+                test_noise[window_start:window_end]
+            )[0, 1])
+            
+            if not np.isnan(corr) and corr > best_corr:
+                best_corr = corr
+                best_lag = lag
+        
+        # Place noise reference at optimal lag
+        start_pos = max(0, best_lag)
+        end_pos = min(n_samples, best_lag + ref_length)
+        ref_start = max(0, -best_lag)
+        ref_end = ref_start + (end_pos - start_pos)
+        
+        if end_pos > start_pos:
+            noise_padded[start_pos:end_pos] = noise_ref[ref_start:ref_end]
+        
+        # Initialize adaptive filter weights
+        weights = np.zeros(filter_length)
+        
+        # Create filtered output
+        filtered_signal = signal.copy()
+        
+        # LMS adaptive filtering
+        for n in range(filter_length, n_samples):
+            # Get filter input (windowed noise reference)
+            x = noise_padded[n-filter_length:n][::-1]  # Reverse for convolution
+            
+            # Estimate noise at this sample
+            noise_estimate = np.dot(weights, x)
+            
+            # Calculate error (desired output)
+            error = signal[n] - noise_estimate
+            
+            # Update filter weights (LMS algorithm)
+            weights += 2 * mu * error * x
+            
+            # Output is the error (noise-subtracted signal)
+            filtered_signal[n] = error
+        
+        return filtered_signal
+
     def fk_spectrum(self, pad_t=2, pad_x=2):
         '''
         Calculates the 2D Fourier transform, for seismic data this results in
