@@ -410,7 +410,9 @@ class Seismic:
         >>> result = seis.optimize_signature_window(6415, 30.5, 31.7)
         >>> print(f"Optimized window: {result['start_time_ms']:.2f} - {result['end_time_ms']:.2f} ms")
         >>> # Use optimized parameters for deconvolution
-        >>> seis.signature_deconvolution(6415, result['start_time_ms'], result['end_time_ms'])
+        >>> seis.signature_deconvolution(trace_number=6415,
+        ...                              start_time_ms=result['start_time_ms'],
+        ...                              end_time_ms=result['end_time_ms'])
         """
         
         n_samples, n_traces = self.data.shape
@@ -649,67 +651,43 @@ class Seismic:
         print(f"  Saved diagnostic plot: {filename}")
         plt.show()
     
-    def signature_deconvolution(self, trace_number, start_time_ms, end_time_ms,
-                                method='wiener', epsilon=0.01, prewhiten=True, 
-                                prewhiten_percent=1.0, auto_optimize=False,
-                                optimize_criterion='spectral_flatness', inplace=True):
+    def extract_wavelet(self, trace_number, start_time_ms, end_time_ms, taper=0.2,
+                        auto_optimize=False, optimize_criterion='spectral_flatness'):
         """
-        Deconvolve seismic data using a signature wavelet extracted from a specified trace.
-        This improves vertical resolution by removing the source/system signature.
-        
-        The deconvolution is applied in the frequency domain and is fully vectorized
-        for efficient processing of multiple traces.
-        
+        Extract a signature wavelet from a single trace and time window.
+
+        The wavelet is returned as a plain array so that it can be saved to disk and
+        reused to deconvolve other files that were acquired with the same source and
+        recording system. It is deliberately not stored on the object: the wavelet is
+        a property of the acquisition, not of this particular dataset.
+
         Parameters
         ----------
         trace_number : int
-            Trace number to extract the signature wavelet from (0-indexed)
-        start_time_ms : float
-            Start time in milliseconds for signature extraction window
-        end_time_ms : float
-            End time in milliseconds for signature extraction window
-        method : str, optional
-            Deconvolution method: 'wiener', 'spiking', or 'water-level'. 
-            Default is 'wiener'.
-            - 'wiener': Wiener deconvolution (frequency domain, stable)
-            - 'spiking': Spiking deconvolution (assumes minimum phase)
-            - 'water-level': Water-level deconvolution (stabilized inverse)
-        epsilon : float, optional
-            Stabilization parameter (noise level). Default is 0.01 (1%).
-            Typical range: 0.001-0.1
-        prewhiten : bool, optional
-            Apply pre-whitening to signature. Default is True (recommended).
-        prewhiten_percent : float, optional
-            Pre-whitening percentage (0-100). Default is 1.0%.
-            Typical range: 0.5-5.0
+            Trace number to extract the wavelet from (0-indexed).
+        start_time_ms, end_time_ms : float
+            Extraction window in milliseconds.
+        taper : float, optional
+            Fraction of the wavelet length that is tapered (Tukey window, 0-1).
+            Default is 0.2. Set to 0 to disable. Tapering suppresses the spectral
+            ringing caused by the hard edges of a raw time slice.
         auto_optimize : bool, optional
-            If True, automatically optimizes the signature extraction window.
-            Default is False. Uses optimize_signature_window() internally.
+            If True, refine the window with optimize_signature_window() first.
         optimize_criterion : str, optional
-            Criterion for automatic optimization (if auto_optimize=True).
-            Default is 'spectral_flatness'.
-            Options: 'spectral_flatness', 'energy', 'kurtosis', 'bandwidth'
-        inplace : bool, optional
-            If True, modifies self.data. If False, returns deconvolved data.
-            Default is True.
-            
+            Criterion used when auto_optimize is True.
+            Options: 'spectral_flatness', 'energy', 'kurtosis', 'bandwidth'.
+
         Returns
         -------
-        numpy.ndarray or None
-            If inplace=False, returns deconvolved data array.
-            If inplace=True, modifies self.data in place and returns None.
-            
+        numpy.ndarray
+            1D signature wavelet, sampled at self.fs.
+
         Examples
         --------
-        >>> seis = Seismic(data, fs=1000, dx=1.0)
-        >>> # Manual window specification
-        >>> seis.signature_deconvolution(50, 10, 30, method='wiener', epsilon=0.01)
-        >>> 
-        >>> # With automatic window optimization
-        >>> seis.signature_deconvolution(50, 10, 30, auto_optimize=True)
+        >>> wavelet = seis.extract_wavelet(13241, 7.35, 7.6)
+        >>> np.save('signature_wavelet.npy', wavelet)
         """
-        
-        # Auto-optimize window if requested
+
         if auto_optimize:
             print("Auto-optimizing signature window...")
             opt_result = self.optimize_signature_window(
@@ -719,91 +697,164 @@ class Seismic:
             start_time_ms = opt_result['start_time_ms']
             end_time_ms = opt_result['end_time_ms']
             print(f"Using optimized window: {start_time_ms:.2f} - {end_time_ms:.2f} ms")
-        
-        # Validate inputs
+
         n_samples, n_traces = self.data.shape
-        
+
         if trace_number < 0 or trace_number >= n_traces:
             raise ValueError(f"trace_number {trace_number} is out of bounds. Valid range: 0-{n_traces-1}")
-        
-        # Convert time to sample indices (fs is in Hz, so convert ms to seconds first)
+
         start_sample = int(start_time_ms * self.fs / 1000.0)
         end_sample = int(end_time_ms * self.fs / 1000.0)
-        
-        # Calculate max time in ms
         max_time_ms = (n_samples / self.fs) * 1000.0
-        
-        # Validate sample indices
+
         if start_sample < 0 or start_sample >= n_samples:
             raise ValueError(f"start_time_ms {start_time_ms} is out of bounds. Valid range: 0-{max_time_ms:.2f} ms")
         if end_sample <= start_sample or end_sample > n_samples:
             raise ValueError(f"end_time_ms {end_time_ms} is invalid. Must be > {start_time_ms} and <= {max_time_ms:.2f} ms")
-        
-        # Extract signature wavelet from specified trace and time window
-        signature = self.data[start_sample:end_sample, trace_number].copy()
-        n_sig = len(signature)
-        
-        if n_sig == 0:
-            raise ValueError(f"Extracted signature has zero length. Check time window: {start_time_ms}-{end_time_ms} ms")
-        
+
+        wavelet = np.asarray(self.data[start_sample:end_sample, trace_number], dtype=float).copy()
+
+        if wavelet.size == 0:
+            raise ValueError(f"Extracted wavelet has zero length. Check time window: {start_time_ms}-{end_time_ms} ms")
+        if not np.any(wavelet):
+            raise ValueError(f"Extracted wavelet is all zeros at trace {trace_number}, {start_time_ms}-{end_time_ms} ms")
+
+        if taper:
+            if not 0 < taper <= 1:
+                raise ValueError(f"taper must be in (0, 1], got {taper}")
+            wavelet *= signal.windows.tukey(wavelet.size, alpha=taper)
+
+        print(f"Wavelet extracted from trace {trace_number}, time {start_time_ms}-{end_time_ms} ms "
+              f"({wavelet.size} samples at {self.fs} Hz)")
+
+        return wavelet
+
+    def signature_deconvolution(self, wavelet=None, *, trace_number=None, start_time_ms=None,
+                                end_time_ms=None, taper=0.2, wavelet_fs=None,
+                                method='wiener', epsilon=0.01, prewhiten=True,
+                                prewhiten_percent=1.0, auto_optimize=False,
+                                optimize_criterion='spectral_flatness', inplace=True):
+        """
+        Deconvolve seismic data with a signature wavelet to remove the source/system
+        signature and improve vertical resolution.
+
+        The deconvolution is applied in the frequency domain and is fully vectorized
+        over traces. Supply an explicit `wavelet` (see extract_wavelet) to apply the
+        same signature to every file of a survey, which keeps amplitudes comparable
+        between files. If no wavelet is given, one is extracted from this dataset.
+
+        Parameters
+        ----------
+        wavelet : numpy.ndarray, optional
+            1D signature wavelet, sampled at the same rate as this dataset.
+            If None, it is extracted using trace_number/start_time_ms/end_time_ms.
+        trace_number, start_time_ms, end_time_ms : optional
+            Extraction window, only used when `wavelet` is None.
+        taper : float, optional
+            Taper fraction used when extracting the wavelet. Default is 0.2.
+        wavelet_fs : float, optional
+            Sampling rate the supplied wavelet was extracted at. If given, it must
+            match self.fs; this guards against mixing files with different rates.
+        method : str, optional
+            'wiener' (default), 'spiking' or 'water-level'.
+            - 'wiener': Wiener deconvolution (frequency domain, stable)
+            - 'spiking': Spiking deconvolution (assumes minimum phase)
+            - 'water-level': Water-level deconvolution (stabilized inverse)
+        epsilon : float, optional
+            Stabilization parameter (noise level). Default is 0.01 (1%).
+            Typical range: 0.001-0.1
+        prewhiten : bool, optional
+            Add a white noise floor to the wavelet power spectrum. Default is True.
+            This acts on the spectrum, in addition to `epsilon`; the two mechanisms
+            are largely redundant, so tune one of them.
+        prewhiten_percent : float, optional
+            Noise floor as a percentage of the peak wavelet power (0-100).
+            Default is 1.0%. Typical range: 0.5-5.0
+        auto_optimize : bool, optional
+            Refine the extraction window automatically (ignored if `wavelet` is given).
+        optimize_criterion : str, optional
+            Criterion for automatic optimization. Default is 'spectral_flatness'.
+            Options: 'spectral_flatness', 'energy', 'kurtosis', 'bandwidth'
+        inplace : bool, optional
+            If True (default), modifies self.data. If False, returns the result.
+
+        Returns
+        -------
+        numpy.ndarray or None
+            Deconvolved data if inplace is False, otherwise None.
+
+        Examples
+        --------
+        >>> wavelet = reference.extract_wavelet(13241, 7.35, 7.6)
+        >>> seis.signature_deconvolution(wavelet, method='wiener', epsilon=0.01)
+        >>>
+        >>> # Or extract from this dataset itself
+        >>> seis.signature_deconvolution(trace_number=50, start_time_ms=10, end_time_ms=30)
+        """
+
+        if wavelet is None:
+            if trace_number is None or start_time_ms is None or end_time_ms is None:
+                raise ValueError("Provide either a wavelet, or trace_number, start_time_ms and end_time_ms.")
+            wavelet = self.extract_wavelet(trace_number, start_time_ms, end_time_ms, taper=taper,
+                                           auto_optimize=auto_optimize,
+                                           optimize_criterion=optimize_criterion)
+        else:
+            wavelet = np.asarray(wavelet, dtype=float).squeeze()
+            if wavelet.ndim != 1:
+                raise ValueError(f"wavelet must be 1D, got shape {wavelet.shape}")
+            if wavelet_fs is not None and not np.isclose(wavelet_fs, self.fs):
+                raise ValueError(f"wavelet was extracted at {wavelet_fs} Hz but this data is sampled "
+                                 f"at {self.fs} Hz. Resample the wavelet or exclude this file.")
+
         n_data = self.data.shape[0]
-        
-        # Pad signature to match data length for frequency domain operations
-        signature_padded = np.zeros(n_data)
-        signature_padded[:n_sig] = signature
-        
-        # Apply pre-whitening to signature (recommended for stability)
-        if prewhiten:
-            whitening_factor = prewhiten_percent / 100.0
-            max_sig_amp = np.max(np.abs(signature))
-            if max_sig_amp > 0:
-                signature_padded[:n_sig] = signature + whitening_factor * max_sig_amp
-            else:
-                print("Warning: Signature has zero amplitude, skipping pre-whitening")
-        
-        # Transform to frequency domain (vectorized for all traces)
-        sig_fft = np.fft.fft(signature_padded)
+
+        if wavelet.size > n_data:
+            raise ValueError(f"wavelet ({wavelet.size} samples) is longer than the traces ({n_data} samples)")
+
+        # Zero-pad the wavelet to the trace length for the frequency domain operations
+        wavelet_padded = np.zeros(n_data)
+        wavelet_padded[:wavelet.size] = wavelet
+
+        sig_fft = np.fft.fft(wavelet_padded)
+        sig_power = np.abs(sig_fft)**2
         data_fft = np.fft.fft(self.data, axis=0)
-        
-        # Apply deconvolution based on method
+
+        # Pre-whitening is a white noise floor added to the wavelet power spectrum,
+        # equivalent to adding a constant to the zero-lag of its autocorrelation.
+        noise_floor = 0.0
+        if prewhiten:
+            noise_floor = (prewhiten_percent / 100.0) * np.max(sig_power)
+
         if method == 'wiener':
             # Wiener deconvolution: optimal in least-squares sense
-            sig_power = np.abs(sig_fft)**2
-            # Use constant stabilization (noise power estimate)
-            # This provides uniform regularization across all frequencies
-            noise_power = epsilon * np.mean(sig_power)  # Estimate of noise power
+            noise_power = epsilon * np.mean(sig_power) + noise_floor
             wiener_filter = np.conj(sig_fft) / (sig_power + noise_power)
-            # Apply to all traces (broadcasting)
             deconvolved_fft = data_fft * wiener_filter[:, np.newaxis]
-            
+
         elif method == 'spiking':
             # Spiking deconvolution: assumes minimum phase
-            sig_power = np.abs(sig_fft)**2
-            # Inverse filter with water-level stabilization
-            inverse_filter = 1.0 / (sig_fft + epsilon * np.max(np.abs(sig_fft)))
+            stabilization = epsilon * np.max(np.abs(sig_fft)) + np.sqrt(noise_floor)
+            inverse_filter = 1.0 / (sig_fft + stabilization)
             deconvolved_fft = data_fft * inverse_filter[:, np.newaxis]
-            
+
         elif method == 'water-level':
             # Water-level deconvolution: prevents division by small values
-            water_level = epsilon * np.max(np.abs(sig_fft))
-            # Create stabilized inverse
-            sig_fft_stab = np.where(np.abs(sig_fft) < water_level, 
-                                   water_level * np.exp(1j * np.angle(sig_fft)), 
-                                   sig_fft)
+            water_level = epsilon * np.max(np.abs(sig_fft)) + np.sqrt(noise_floor)
+            sig_fft_stab = np.where(np.abs(sig_fft) < water_level,
+                                    water_level * np.exp(1j * np.angle(sig_fft)),
+                                    sig_fft)
             inverse_filter = 1.0 / sig_fft_stab
             deconvolved_fft = data_fft * inverse_filter[:, np.newaxis]
-            
+
         else:
             raise ValueError(f"Unknown method '{method}'. Use 'wiener', 'spiking', or 'water-level'.")
-        
-        # Transform back to time domain
+
         deconvolved_data = np.real(np.fft.ifft(deconvolved_fft, axis=0))
-        
-        # Update or return
+
         if inplace:
             self.data = deconvolved_data
-            print(f"Signature deconvolution applied using {method} method")
-            print(f"Signature extracted from trace {trace_number}, time {start_time_ms}-{end_time_ms} ms")
+            print(f"Signature deconvolution applied using {method} method "
+                  f"({wavelet.size}-sample wavelet)")
         else:
             return deconvolved_data
 

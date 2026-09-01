@@ -4314,12 +4314,13 @@ packages:
 - pypi: ./
   name: deltaseis
   version: 0.0.5
-  sha256: c6a3b0ca4a42bdeed62a02be047c243252faff9555a6367e78b1e7060016f304
+  sha256: c3106f01a2333ae2832f2cf30ae6a811f96e27c55b68da51ad808a4ce01ba822
   requires_dist:
   - segyio
   - segpy
   - segysak
   - geost>=0.3.0,<0.4
+  - obspy
   - black ; extra == 'dev'
   - pytest ; extra == 'dev'
   - pytest-cov ; extra == 'dev'
@@ -4327,7 +4328,6 @@ packages:
   - sphinx ; extra == 'dev'
   - sphinx-rtd-theme ; extra == 'dev'
   requires_python: '>=3.13'
-  editable: true
 - pypi: https://files.pythonhosted.org/packages/87/45/ca760deab4de448e6c0e3860fc187bcc49216eabda379f6ce68065158843/distributed-2025.12.0-py3-none-any.whl
   name: distributed
   version: 2025.12.0
