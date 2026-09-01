@@ -7,7 +7,7 @@ from deltaseis.processing.preprocessing import (
     resample,
 )
 from deltaseis.processing.surfacewaves import masw
-from deltaseis.processing.wavelets import load_or_extract_wavelet
+from deltaseis.processing.wavelets import extract_wavelet_from_segy
 from deltaseis.readers.reader_seismic_oscilloscope import read_waveforms_csv
 from deltaseis.readers.reader_seismic_specfem import read_semd
 from deltaseis.tools.merge import merge_segys
