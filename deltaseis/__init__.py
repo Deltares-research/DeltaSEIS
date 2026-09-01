@@ -1,3 +1,4 @@
+from deltaseis import config
 from deltaseis.base_seismic import Seismic
 from deltaseis.export.export_seismic_segy import export_sg2, export_sgy
 from deltaseis.processing.preprocessing import (
@@ -6,11 +7,10 @@ from deltaseis.processing.preprocessing import (
     resample,
 )
 from deltaseis.processing.surfacewaves import masw
+from deltaseis.processing.wavelets import load_or_extract_wavelet
 from deltaseis.readers.reader_seismic_oscilloscope import read_waveforms_csv
 from deltaseis.readers.reader_seismic_specfem import read_semd
 from deltaseis.tools.merge import merge_segys
 from deltaseis.tools.segy_editor import Segy_edit
-
-from deltaseis import config
 
 __version__ = "0.0.5"
