@@ -39,12 +39,15 @@ And the same as with installation type:
 pixi run install
 ```
 
+## Data Files
+Large binary data files (seismic data, images, videos) are not tracked in the Git repository to keep clone times fast. See [deltaseis/data/README.md](deltaseis/data/README.md) for information on obtaining example data files.
+
 ## Tutorial
 Activate the deltaseis_env in a command prompt and type 
 ```
 pixi run notebook
 ```
-In the browser that opens up, navigate to deltaseis/tutorials and click on segy_editing.ipynb to start a tutorial on how to edit seismic data files called seg-y using the class **Segy_editor**
+In the browser that opens up, navigate to deltaseis/tutorials and click on segy_editing.ipynb to start a tutorial on how to edit seismic data files called seg-y using the class **Segy_editor**. Note: You may need to provide your own data files or download example data separately (see Data Files section above).
 ## Usage
 The same tutorial folder there is a .py script that has the same commands as the notebook, that you can use as a template for using the Segy_editor.
 In the below example we load a segy file for which we like to change the record length to 55 ms and write a copy that reflects that change:
