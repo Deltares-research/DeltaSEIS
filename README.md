@@ -40,13 +40,12 @@ pixi run install
 ```
 
 ## Tutorial
-Activate the deltaseis_env in a command prompt and type 
+Start the SEG-Y editing tutorial with:
 ```
 pixi run notebook
 ```
-In the browser that opens up, navigate to deltaseis/tutorials and click on segy_editing.ipynb to start a tutorial on how to edit seismic data files called seg-y using the class **Segy_editor**
+
 ## Usage
-The same tutorial folder there is a .py script that has the same commands as the notebook, that you can use as a template for using the Segy_editor.
 In the below example we load a segy file for which we like to change the record length to 55 ms and write a copy that reflects that change:
 ```
 from deltaseis import Seg_editor

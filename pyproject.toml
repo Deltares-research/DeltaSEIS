@@ -50,8 +50,6 @@ dev = [
     "pytest",
     "pytest-cov",
     "ruff",
-    "sphinx",
-    "sphinx-rtd-theme",
 ]
 
 [project.urls]
@@ -64,15 +62,6 @@ include = ["deltaseis", "deltaseis.*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "deltaseis.__version__"}
-
-[tool.pytest.ini_options]
-testpaths = [
-    "tests",
-]
-markers = [ 
-	"unittest: test of single component",
-	"integrationtest: test of multiple components",
-]
 
 [tool.black]
 line-length = 88
@@ -122,3 +111,4 @@ env = { GDAL_DATA = "$PIXI_PROJECT_ROOT/.pixi/envs/default/Library/share/gdal" }
 [tool.pixi.tasks]
 notebook = "jupyter notebook ./tutorials/segy_editing.ipynb"
 
+# Launches the retained SEG-Y editing tutorial.
