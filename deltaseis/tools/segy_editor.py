@@ -590,7 +590,7 @@ class Segy_edit:
         self.groupy = self.y
 
     def read_grid(
-        self, grid_path, epsg_grid, horizon_name, velocity=1500
+        self, grid_path, epsg_grid, horizon_name, velocity=1500, grid_format="raster"
     ):
         """
         Retrieves depths and two-way traveltimes corresponding the coordinates
@@ -599,7 +599,7 @@ class Segy_edit:
         Parameters
         ----------
         grid_path : pathlib.Path object
-            path to the input ascii grid
+            Path to the input raster grid or XYZ point file.
         epsg_grid : int
             epsg code of the input ascii grid
         horizon_name: str
@@ -607,6 +607,9 @@ class Segy_edit:
         velocity : int, optional
             The p-wave velocity to be used to convert the horizon to two-way time.
             The default is 1500 m/s
+        grid_format : {"raster", "xyz"}, optional
+            Grid source format. Use "xyz" for a headerless, whitespace-separated
+            X Y Z point file; nearest points are used. Defaults to "raster".
 
         """
 
@@ -616,9 +619,13 @@ class Segy_edit:
             apply_new_coordinates=False,
         )
         
-        # extract horizon depth from the grid associated with each seismic navigation line point, also calculated horizon two-way time
+        # Extract horizon depth at each navigation point and calculate two-way time.
         horizon_depths, horizon_two_way_times = get_grid(
-            grid_path, y_transformed, x_transformed, velocity
+            grid_path,
+            x_transformed,
+            y_transformed,
+            velocity,
+            grid_format=grid_format,
         )
 
         setattr(self, horizon_name, horizon_two_way_times)

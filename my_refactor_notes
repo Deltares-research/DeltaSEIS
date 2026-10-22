@@ -1,0 +1,33 @@
+Deltaseis overleg, 
+Roeland - Wat wil ik kunnen opleveren, wil ik terugkunnen schrijven naar segy of alleen netcdfs? Antwoord: segy en netcdf
+Bas - Ruff over package om alles schoon te maken. 
+Tommer en Roeland - Maak een indeling van classes, inheritance structuur? (niet altijd goed). Niet toevoegen wat je niet nodig hebt.
+Roeland - Self.xxx opruimen, alleen self.x and self.y etc. iets wat 1 x gebruikt wordt als self.src[xxx] aanroepen.
+Roeland - Data folder 1 omhoog en opschonen, alles van projecten eruit. 
+Tommer, Roeland - DIS moet aparte repo krijgen met aparte pyproject.toml die deltaseis installeert. Dev folder (in gitignore) voor heel simpele testen kan in deltaseis, maar dit is voor dev en geen projecten.
+Tommer, Roeland, Bas - Welke object en denk aan animal, cat dog met betrekking to inheritance. Ander is composition (dat moet je ff tutorial van bekijken). Accessor bijv xarray extenden (dit is feitelijk compositioni) 
+Roeland - Maak en branch ‘refactor’ of 'dev' (als tevreden, fast forward merge = main overschrijven). Dus main nu laten zoals het is.
+
+
+tk dialogs
+cell blocks eruit
+local paths staan gedefineeerd
+sunder functions
+pathlib in plaats van strings
+
+
+Roeland:
+opruimen van wat niet nodig is
+
+seismic class (matrix)
+ fs, dt? andere? 
+spatial class
+horizon class
+
+FROGS:
+lat lon probleem
+scalar
+arcseconds
+
+
+make_dummy_nav
